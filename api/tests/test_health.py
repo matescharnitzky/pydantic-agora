@@ -1,0 +1,21 @@
+from fastapi.testclient import TestClient
+from pydantic import PostgresDsn
+
+from agora_api.config import Settings
+from agora_api.main import create_app
+
+
+def test_liveness_does_not_require_database() -> None:
+    client = TestClient(create_app())
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "service": "api"}
+
+
+def test_readiness_returns_service_unavailable_without_leaking_credentials() -> None:
+    settings = Settings(database_url=PostgresDsn("postgresql://agora:secret@127.0.0.1:1/missing"))
+    client = TestClient(create_app(settings))
+    response = client.get("/ready")
+    assert response.status_code == 503
+    assert response.json() == {"status": "unavailable", "service": "api"}
+    assert "secret" not in response.text
