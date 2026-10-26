@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  python:
-    name: Python checks
+  quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -33,10 +33,32 @@ jobs:
       - run: uv run --all-packages --locked ruff check .
       - run: uv run --all-packages --locked ruff format --check .
       - run: uv run --all-packages --locked pyright
-      - run: uv run --all-packages --locked pytest -m 'not integration'
+
+  services:
+    name: ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: API
+            package: agora-api
+            tests: api/tests
+          - name: Worker
+            package: agora-worker
+            tests: worker/tests
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "0.13.5"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --package ${{ matrix.service.package }} --group dev
+      - run: uv run --locked --package ${{ matrix.service.package }} --group dev pytest ${{ matrix.service.tests }} -m 'not integration'
 
   frontend:
-    name: Frontend checks
+    name: Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -50,8 +72,8 @@ jobs:
       - run: npm --prefix frontend run typecheck
       - run: npm --prefix frontend run test
 
-  stack:
-    name: Compose / integration / black-box
+  e2e:
+    name: End-to-End
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Disposable credentials for this job's local database, not stored secrets.
