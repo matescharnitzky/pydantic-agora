@@ -29,7 +29,8 @@ jobs:
           version: "0.13.5"
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --all-packages --locked
+      - name: Validate Python lockfile and install dependencies
+        run: uv sync --all-packages --locked
       - run: uv run --all-packages --locked ruff check .
       - run: uv run --all-packages --locked ruff format --check .
       - run: uv run --all-packages --locked pyright

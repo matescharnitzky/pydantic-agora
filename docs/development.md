@@ -68,6 +68,6 @@ direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose override
 
 ## Containers and CI
 
-Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. uv checks the shared lockfile against both services' dependency declarations, but each image installs only its selected service and runtime dependencies. Hatchling builds each service's installable Python package from its `src/` directory.
+Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. Each image uses `uv sync --frozen` to install its selected service and runtime dependencies from the shared lockfile, and copies only its own dependency declaration and source. CI validates the full workspace lockfile separately with `--locked`. Hatchling builds each service's installable Python package from its `src/` directory.
 
 GitHub Actions reports five checks: **Code Quality** runs shared Python linting and type checks; **API** and **Worker** run their own unit tests with service-specific dependencies; **Frontend** runs its lint, type, and unit checks; **End-to-End** starts the application and runs database, API, and browser tests. Live-model evaluations remain separately invoked.
