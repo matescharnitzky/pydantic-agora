@@ -27,7 +27,7 @@ Published ports bind only to `127.0.0.1`. The worker publishes no port. This is 
 
 ## Develop and test
 
-Use Python 3.13 (uv can install it), Node 24, and pnpm 11.25.0. API and worker are members of a root uv workspace with one `uv.lock` and `.venv`. Their `pyproject.toml` files declare their own runtime dependencies; shared development tools and configuration live in the root `pyproject.toml`. The frontend and black-box tests have separate pnpm projects.
+Use Python 3.13 (uv can install it), Node 24 with its bundled npm. API and worker are members of a root uv workspace with one `uv.lock` and `.venv`. Their `pyproject.toml` files declare their own runtime dependencies; shared development tools and configuration live in the root `pyproject.toml`. The frontend and black-box tests have separate npm projects, each with a `package-lock.json`.
 
 ```sh
 make install
@@ -36,10 +36,10 @@ uv run --all-packages --locked ruff check .
 uv run --all-packages --locked ruff format --check .
 uv run --all-packages --locked pyright
 uv run --all-packages --locked pytest -m 'not integration'
-pnpm --dir frontend lint
-pnpm --dir frontend typecheck
-pnpm --dir frontend test
-pnpm --dir tests typecheck
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck
+npm --prefix frontend run test
+npm --prefix tests run typecheck
 ```
 
 Or run all the above checks with `make check`.
@@ -47,11 +47,11 @@ Or run all the above checks with `make check`.
 With the Compose stack running, install the Playwright browser once and run black-box tests:
 
 ```sh
-pnpm --dir tests exec playwright install chromium
+npm --prefix tests exec -- playwright install chromium
 make smoke
 ```
 
-Bruno requests run against the live FastAPI service. Playwright verifies the browser shell, API, and database readiness together. Neither test suite imports application internals. Override browser targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno use `pnpm --dir tests test:api --env-var baseUrl=http://127.0.0.1:8000`.
+Bruno requests run against the live FastAPI service. Playwright verifies the browser shell, API, and database readiness together. Neither test suite imports application internals. Override browser targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno use `npm --prefix tests run test:api -- --env-var baseUrl=http://127.0.0.1:8000`.
 
 Run the Python database integration tests against local PostgreSQL:
 
@@ -65,7 +65,7 @@ If you changed `.env`, use the corresponding database credentials above. To deve
 docker compose up --detach --wait database
 uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host 127.0.0.1
 uv run --all-packages --locked python -m agora_worker
-pnpm --dir frontend dev
+npm --prefix frontend run dev
 ```
 
 The native service defaults target localhost PostgreSQL. Set `DATABASE_URL` when using different credentials. `API_BASE_URL` is a server-only frontend setting; it defaults to localhost for native development and points to the API container in Compose.

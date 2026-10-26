@@ -1,6 +1,6 @@
 # Architecture
 
-Agora uses a flat service-oriented monorepo. There is no shared application package or `apps` wrapper. Each deployable owns its dependency configuration, container, entry point, and tests. API and worker share a root uv workspace, Python version, lockfile, development environment, and tooling configuration. The frontend and black-box test projects each retain a pnpm lockfile.
+Agora uses a flat service-oriented monorepo. There is no shared application package or `apps` wrapper. Each deployable owns its dependency configuration, container, entry point, and tests. API and worker share a root uv workspace, Python version, lockfile, development environment, and tooling configuration. The frontend and black-box test projects each retain an npm `package-lock.json`.
 
 | Service | Owns | Current boundary |
 | --- | --- | --- |

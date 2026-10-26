@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@11.25.0",
   "engines": { "node": ">=24 <25" },
+  "allowScripts": { "unrs-resolver": true, "esbuild": true, "sharp": true, "fsevents": false },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",

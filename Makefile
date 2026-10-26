@@ -2,8 +2,8 @@
 
 install:
 	uv sync --all-packages --locked
-	pnpm --dir frontend install --frozen-lockfile
-	pnpm --dir tests install --frozen-lockfile
+	npm --prefix frontend ci
+	npm --prefix tests ci
 
 up:
 	docker compose up --build --detach --wait
@@ -16,15 +16,15 @@ check:
 	uv run --all-packages --locked ruff format --check .
 	uv run --all-packages --locked pyright
 	uv run --all-packages --locked pytest -m "not integration"
-	pnpm --dir frontend lint
-	pnpm --dir frontend typecheck
-	pnpm --dir frontend test
-	pnpm --dir tests typecheck
+	npm --prefix frontend run lint
+	npm --prefix frontend run typecheck
+	npm --prefix frontend run test
+	npm --prefix tests run typecheck
 
 test-api:
-	pnpm --dir tests test:api
+	npm --prefix tests run test:api
 
 test-e2e:
-	pnpm --dir tests test:e2e
+	npm --prefix tests run test:e2e
 
 smoke: test-api test-e2e
