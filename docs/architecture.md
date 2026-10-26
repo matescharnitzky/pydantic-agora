@@ -8,10 +8,11 @@ Agora uses a flat service-oriented monorepo. There is no shared application pack
 | API | FastAPI/Pydantic HTTP validation and contracts | `/health` liveness and `/ready` PostgreSQL connectivity |
 | Worker | Python execution process | Verifies PostgreSQL, stays alive until signalled; `--check` probes the database |
 | PostgreSQL | Persistent application and future DBOS state | One local instance backed by a named Compose volume |
+| pgAdmin (optional tool) | Local database inspection and SQL queries | Starts with `make pgadmin`; localhost-only browser UI and separate settings volume |
 
 ## Communication and deployment
 
-The browser talks to the frontend. The frontend server talks to FastAPI through `API_BASE_URL`; this address is not bundled into browser code. The API and worker each independently connect to PostgreSQL. The frontend is on a network with the API; only the API, worker, and database join the backend network. The database has a loopback host port for native development and integration tests. Each process runs in a separate container; application containers run as non-root users. API and worker can evolve and scale independently.
+The browser talks to the frontend. The frontend server talks to FastAPI through `API_BASE_URL`; this address is not bundled into browser code. The API and worker each independently connect to PostgreSQL. The frontend is on a network with the API; the API, worker, database, and optional pgAdmin tool join the backend network. The database has a loopback host port for native development and integration tests. Each process runs in a separate container; application containers run as non-root users. API and worker can evolve and scale independently.
 
 The worker shell intentionally has no queue, job dispatcher, or execution HTTP endpoint. The next feasibility slice must validate a supported DBOS mechanism for API submission to the separate worker, Monty host calls, persistence, and status retrieval. Crash/restart and external-side-effect tests must establish recovery semantics before expanding capabilities. A running shell does not prove DBOS/Monty compatibility, and durability does not establish exactly-once external effects.
 

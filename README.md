@@ -25,6 +25,20 @@ docker compose exec worker python -m agora_worker --check
 
 Published ports bind only to `127.0.0.1`. The worker publishes no port. This is an unauthenticated local development stack; keep it off the public internet. Default database credentials are disposable development values, not production secrets. PostgreSQL data persists in a named volume. `docker compose down` stops services and keeps that data. API/worker readiness fails if PostgreSQL becomes unavailable; API liveness stays independent of the database.
 
+## Inspect the database
+
+Start the optional pgAdmin browser interface with:
+
+```sh
+make pgadmin
+```
+
+Open [pgAdmin](http://127.0.0.1:5050) and sign in with `admin@agora.example` / `pgadmin-local` (or your `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD` overrides in `.env`). Expand **Servers → Agora → Agora local**, then enter the PostgreSQL password (`agora-local` by default, or your `POSTGRES_PASSWORD`). The database connection is registered on first startup using `POSTGRES_DB` and `POSTGRES_USER`; if you change these later, update the saved connection in pgAdmin too.
+
+Browse **Databases → agora → Schemas → public → Tables**, or open the Query Tool to run SQL. There are no application tables yet; execution records arrive in the next phase. pgAdmin inspects stored data; Logfire will trace application operations when instrumentation is added.
+
+pgAdmin binds only to localhost and belongs to the optional `tools` Compose profile, so ordinary `make up` does not start it. Its settings persist in a separate named volume. Stop it with `docker compose stop pgadmin`; `make down` stops and removes all service containers while preserving their data volumes. Sign-in overrides initialize the account on first startup; change an existing account's password inside pgAdmin.
+
 ## Develop and test
 
 Use Python 3.13 (uv can install it), Node 24 with its bundled npm. API and worker are members of a root uv workspace with one `uv.lock` and `.venv`. Their `pyproject.toml` files declare their own runtime dependencies; shared development tools and configuration live in the root `pyproject.toml`. The frontend and black-box tests have separate npm projects, each with a `package-lock.json`.
