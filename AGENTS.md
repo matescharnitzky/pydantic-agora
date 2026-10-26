@@ -17,10 +17,10 @@ Agora is an independent open-source playground for the Pydantic ecosystem, not a
 - Use Node 24 and its bundled npm. Keep TypeScript strict, ESLint, Vitest, and the two JavaScript lockfiles reproducible.
 - `make install` installs dependencies. `make check` runs static checks and unit tests. `make up` builds and starts the full stack; `make smoke` runs black-box tests against it.
 - Run Python checks from the root with `uv run --all-packages --locked`. Use `uv run --package agora-api` or `uv run --package agora-worker` for a service command. Black-box commands run from `tests` and must use only HTTP/browser interfaces.
-- Run selected PostgreSQL integration checks with `DATABASE_URL` set; see the README. Do not silently substitute mocks when claiming a live integration passed.
+- Run selected PostgreSQL integration checks with `POSTGRES_PASSWORD` and the matching `POSTGRES_*` settings loaded; see `docs/development.md`. Do not silently substitute mocks when claiming a live integration passed.
 - CI runs deterministic checks on pull requests. Keep expensive live-model evaluations separately invoked when introduced.
-- Do not add model credentials or production secrets to examples, tests, logs, or browser bundles. Keep local environment files ignored.
+- Do not add model credentials or production secrets to examples, tests, logs, or browser bundles. Store secrets in 1Password and load them through direnv; `.envrc` must contain no secret values. Do not use plaintext `.env` files. Variable documentation belongs in `docs/configuration.md`.
 
 ## Changes
 
-Read the issue and relevant architecture decisions before implementing. Add focused verification for observable behavior. Record commands run and any unverified limitations in the PR. Keep generated artifacts, virtual environments, and local plans untracked.
+Read the issue and `docs/architecture.md` before implementing. Add focused verification for observable behavior. Record commands run and any unverified limitations in the PR. Keep generated artifacts, virtual environments, and local plans untracked.

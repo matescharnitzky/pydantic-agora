@@ -1,93 +1,29 @@
 # Agora
 
-An independent playground for exploring, composing, observing, and evaluating the Pydantic AI ecosystem. Not affiliated with or endorsed by Pydantic.
+An independent playground for exploring the Pydantic AI ecosystem. Not affiliated with or endorsed by Pydantic.
 
-This foundation starts three separate services and PostgreSQL. The frontend displays live API/database readiness; the worker verifies its database connection and shuts down cleanly. Capability execution, DBOS, Monty, and model integrations are introduced by subsequent issues.
+## Run locally
 
-## Start locally
-
-Install Docker with the Compose plugin, then run:
+Install Docker with Compose and follow [configuration setup](docs/configuration.md), then run:
 
 ```sh
-cp .env.example .env
-docker compose up --build --detach --wait
+make up
 ```
 
-Open [Agora](http://127.0.0.1:3000) or [API documentation](http://127.0.0.1:8000/docs). Check services with:
+- [Application](http://127.0.0.1:3000)
+- [API docs](http://127.0.0.1:8000/docs)
+- [pgAdmin](http://127.0.0.1:5050) — start separately with `make pgadmin`
 
-```sh
-docker compose ps
-docker compose logs worker
-curl --fail http://127.0.0.1:8000/health
-curl --fail http://127.0.0.1:8000/ready
-docker compose exec worker python -m agora_worker --check
-```
+Stop everything with `make down`. Database data is preserved. This is a local development stack; published ports bind to localhost.
 
-Published ports bind only to `127.0.0.1`. The worker publishes no port. This is an unauthenticated local development stack; keep it off the public internet. Default database credentials are disposable development values, not production secrets. PostgreSQL data persists in a named volume. `docker compose down` stops services and keeps that data. API/worker readiness fails if PostgreSQL becomes unavailable; API liveness stays independent of the database.
+## Development
 
-## Inspect the database
-
-Start the optional pgAdmin browser interface with:
-
-```sh
-make pgadmin
-```
-
-Open [pgAdmin](http://127.0.0.1:5050) and sign in with `admin@agora.example` / `pgadmin-local` (or your `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD` overrides in `.env`). Expand **Servers → Agora → Agora local**, then enter the PostgreSQL password (`agora-local` by default, or your `POSTGRES_PASSWORD`). The database connection is registered on first startup using `POSTGRES_DB` and `POSTGRES_USER`; if you change these later, update the saved connection in pgAdmin too.
-
-Browse **Databases → agora → Schemas → public → Tables**, or open the Query Tool to run SQL. There are no application tables yet; execution records arrive in the next phase. pgAdmin inspects stored data; Logfire will trace application operations when instrumentation is added.
-
-pgAdmin binds only to localhost and belongs to the optional `tools` Compose profile, so ordinary `make up` does not start it. Its settings persist in a separate named volume. Stop it with `docker compose stop pgadmin`; `make down` stops and removes all service containers while preserving their data volumes. Sign-in overrides initialize the account on first startup; change an existing account's password inside pgAdmin.
-
-## Develop and test
-
-Use Python 3.13 (uv can install it), Node 24 with its bundled npm. API and worker are members of a root uv workspace with one `uv.lock` and `.venv`. Their `pyproject.toml` files declare their own runtime dependencies; shared development tools and configuration live in the root `pyproject.toml`. The frontend and black-box tests have separate npm projects, each with a `package-lock.json`.
+Use Python 3.13, uv, and Node 24 with npm. Python requirements are declared in the services' `pyproject.toml` files.
 
 ```sh
 make install
-# Run from the repository root:
-uv run --all-packages --locked ruff check .
-uv run --all-packages --locked ruff format --check .
-uv run --all-packages --locked pyright
-uv run --all-packages --locked pytest -m 'not integration'
-npm --prefix frontend run lint
-npm --prefix frontend run typecheck
-npm --prefix frontend run test
-npm --prefix tests run typecheck
+make check
+make smoke  # Requires the running stack and Playwright Chromium
 ```
 
-Or run all the above checks with `make check`.
-
-With the Compose stack running, install the Playwright browser once and run black-box tests:
-
-```sh
-npm --prefix tests exec -- playwright install chromium
-make smoke
-```
-
-Bruno requests run against the live FastAPI service. Playwright verifies the browser shell, API, and database readiness together. Neither test suite imports application internals. Override browser targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno use `npm --prefix tests run test:api -- --env-var baseUrl=http://127.0.0.1:8000`.
-
-Run the Python database integration tests against local PostgreSQL:
-
-```sh
-DATABASE_URL=postgresql://agora:agora-local@127.0.0.1:5432/agora uv run --all-packages --locked pytest -m integration
-```
-
-If you changed `.env`, use the corresponding database credentials above. To develop services without rebuilding containers, start just PostgreSQL, then run each process in a separate terminal:
-
-```sh
-docker compose up --detach --wait database
-uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host 127.0.0.1
-uv run --all-packages --locked python -m agora_worker
-npm --prefix frontend run dev
-```
-
-The native service defaults target localhost PostgreSQL. Set `DATABASE_URL` when using different credentials. `API_BASE_URL` is a server-only frontend setting; it defaults to localhost for native development and points to the API container in Compose.
-
-The commands above keep both packages installed in the shared development environment, which is useful when running the two services concurrently. For a single-service environment, use `uv sync --package agora-api` or `uv sync --package agora-worker`. Container builds use these package selections with `--no-dev`, so development tools and the other service are excluded from each runtime image. Build the Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`.
-
-## Contributing
-
-Start from a [scoped issue](https://github.com/matescharnitzky/pydantic-agora/issues), read [architecture](docs/architecture.md) and [agent/contributor guidance](AGENTS.md), and open a focused PR using the template. Run applicable checks and describe the behavior they verify. PR CI builds the real containers and runs the integration, Bruno, and browser smoke tests. Main-branch and scheduled runs use the same complete foundation suite; broader recovery suites will be added when the runtime exists. Live-model evaluations are outside routine CI.
-
-The roadmap is maintained in GitHub issues. Local planning material is not part of the tracked source.
+See [development commands and pgAdmin login](docs/development.md), [architecture](docs/architecture.md), and [contributor guidance](AGENTS.md). Planned work is tracked in [GitHub issues](https://github.com/matescharnitzky/pydantic-agora/issues).

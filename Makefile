@@ -1,3 +1,5 @@
+export COMPOSE_DISABLE_ENV_FILE := 1
+
 .PHONY: install up pgadmin down check test-api test-e2e smoke
 
 install:

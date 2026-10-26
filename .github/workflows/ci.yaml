@@ -54,6 +54,12 @@ jobs:
     name: Compose / integration / black-box
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Disposable credentials for this job's local database, not stored secrets.
+    env:
+      COMPOSE_DISABLE_ENV_FILE: "1"
+      POSTGRES_PASSWORD: agora-ci
+      PGADMIN_EMAIL: admin@agora.example
+      PGADMIN_PASSWORD: pgadmin-ci
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
@@ -69,8 +75,6 @@ jobs:
       - run: npm --prefix tests exec -- playwright install --with-deps chromium
       - run: docker compose up --build --detach --wait --wait-timeout 120
       - name: Database integration tests
-        env:
-          DATABASE_URL: postgresql://agora:agora-local@127.0.0.1:5432/agora
         run: |
           uv run --all-packages --locked pytest -m integration
           docker compose exec -T worker python -m agora_worker --check

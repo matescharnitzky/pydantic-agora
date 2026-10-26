@@ -3,7 +3,8 @@ FROM python:3.13-slim-bookworm
 COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 UV_LINK_MODE=copy
-COPY pyproject.toml uv.lock .python-version ./
+COPY pyproject.toml uv.lock ./
+# uv validates the shared lockfile against both workspace packages.
 COPY api/pyproject.toml ./api/pyproject.toml
 COPY worker/pyproject.toml ./worker/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --package agora-worker --no-dev --no-install-workspace

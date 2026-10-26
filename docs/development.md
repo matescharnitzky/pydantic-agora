@@ -1,0 +1,73 @@
+# Development
+
+Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; uv selects a compatible interpreter. The root uv workspace shares one development environment and lockfile.
+
+## Install and check
+
+```sh
+make install
+make check
+```
+
+`make check` runs Ruff, Pyright, Python unit tests, ESLint, TypeScript, and frontend unit tests. Run individual JavaScript commands with `npm --prefix frontend run lint` or `npm --prefix tests run typecheck`.
+
+## Running stack
+
+```sh
+make up
+docker compose ps
+docker compose logs -f
+make down
+```
+
+`make up` starts the frontend, API, worker, and PostgreSQL. `make down` also removes the optional pgAdmin container and preserves data volumes. The API's `/health` endpoint checks process liveness; `/ready` checks PostgreSQL. The worker verifies connectivity and handles shutdown; it does not execute capabilities yet.
+
+## Database browser
+
+```sh
+make pgadmin
+```
+
+Open [pgAdmin](http://127.0.0.1:5050) and sign in with `PGADMIN_EMAIL` and the pgAdmin password stored in 1Password. Expand **Servers → Agora → Agora local** and enter the PostgreSQL password from 1Password.
+
+For an existing pgAdmin connection created before the Compose rename, change its Host from `database` to `postgres`. New connections use `postgres`.
+
+The server connection is imported on first startup with the configured `POSTGRES_DB` and `POSTGRES_USER`. If these change later, update the saved pgAdmin connection too. pgAdmin sign-in credentials also initialize on first startup; change an existing account's password within pgAdmin.
+
+Browse **Databases → agora → Schemas → public → Tables**, or open Query Tool. There are no application tables until Phase 2. Settings persist in a separate volume. Use `docker compose stop pgadmin` to stop only this tool.
+
+## API, browser, and database tests
+
+Install the browser once, then test the running stack:
+
+```sh
+npm --prefix tests exec -- playwright install chromium
+make smoke
+```
+
+Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm --prefix tests run test:api -- --env-var baseUrl=http://127.0.0.1:8000`.
+
+Run Python integration tests against local PostgreSQL, using the matching credentials if overridden:
+
+```sh
+uv run --all-packages --locked pytest -m integration
+```
+
+## Native development
+
+Start PostgreSQL, then run each application in a separate terminal:
+
+```sh
+docker compose up --detach --wait postgres
+uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host 127.0.0.1
+uv run --all-packages --locked python -m agora_worker
+npm --prefix frontend run dev
+```
+
+direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://127.0.0.1:8000`. Compose sets it to `http://api:8000`.
+
+## Containers and CI
+
+Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. uv checks the shared lockfile against both services' dependency declarations, but each image installs only its selected service and runtime dependencies. Hatchling builds each service's installable Python package from its `src/` directory.
+
+GitHub Actions runs static checks, unit tests, and the full Compose/integration/Bruno/Playwright suite. Live-model evaluations will remain separately invoked.

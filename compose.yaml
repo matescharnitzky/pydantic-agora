@@ -6,8 +6,8 @@ services:
     profiles: [tools]
     user: "5050:5050"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@agora.example}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-pgadmin-local}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Load pgAdmin credentials with direnv allow}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Load pgAdmin credentials with direnv allow}
       PGADMIN_DISABLE_POSTFIX: "1"
       PGADMIN_LISTEN_PORT: "5050"
     ports:
@@ -18,7 +18,7 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
-      database:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "/venv/bin/python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5050/misc/ping', timeout=3)"]
@@ -28,12 +28,12 @@ services:
       start_period: 20s
     networks: [backend]
 
-  database:
+  postgres:
     image: postgres:17-bookworm
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-agora}
       POSTGRES_USER: ${POSTGRES_USER:-agora}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agora-local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -50,11 +50,15 @@ services:
       context: .
       dockerfile: api/Dockerfile
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-agora}:${POSTGRES_PASSWORD:-agora-local}@database:5432/${POSTGRES_DB:-agora}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-agora}
+      POSTGRES_USER: ${POSTGRES_USER:-agora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      database:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3)"]
@@ -68,9 +72,13 @@ services:
       context: .
       dockerfile: worker/Dockerfile
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-agora}:${POSTGRES_PASSWORD:-agora-local}@database:5432/${POSTGRES_DB:-agora}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-agora}
+      POSTGRES_USER: ${POSTGRES_USER:-agora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
     depends_on:
-      database:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-m", "agora_worker", "--check"]
@@ -109,7 +117,7 @@ configs:
           "1": {
             "Name": "Agora local",
             "Group": "Agora",
-            "Host": "database",
+            "Host": "postgres",
             "Port": 5432,
             "MaintenanceDB": "${POSTGRES_DB:-agora}",
             "Username": "${POSTGRES_USER:-agora}",
