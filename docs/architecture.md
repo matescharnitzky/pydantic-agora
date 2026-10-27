@@ -14,5 +14,3 @@ flowchart LR
 ```
 
 The current stack checks service and database readiness. The worker does not execute capabilities yet.
-
-API and worker share a uv workspace and lockfile, but each container installs only its own runtime dependencies. They do not import each other's internals. Frontend dependencies use npm workspaces.
