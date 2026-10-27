@@ -14,7 +14,7 @@ Agora is an independent open-source playground for the Pydantic ecosystem, not a
 ## Development and verification
 
 - Use Python 3.13 with the root uv workspace, Ruff, Pyright strict mode, and pytest. Commit the root uv lockfile. Declare runtime dependencies in each service’s `pyproject.toml` and common development tools/configuration at the root.
-- Use Node 24 and its bundled npm. Keep TypeScript strict, ESLint, Vitest, and the two JavaScript lockfiles reproducible.
+- Use Node 24 and its bundled npm. Keep TypeScript strict, ESLint, Vitest, and the root npm workspace lockfile reproducible.
 - `make install` installs dependencies. `make check` runs static checks and unit tests. `make up` builds and starts the full stack; `make smoke` runs black-box tests against it.
 - Run Python checks from the root with `uv run --all-packages --locked`. Use `uv run --package agora-api` or `uv run --package agora-worker` for a service command. Black-box commands run from `tests` and must use only HTTP/browser interfaces.
 - Run selected PostgreSQL integration checks with `POSTGRES_PASSWORD` and the matching `POSTGRES_*` settings loaded; see `docs/development.md`. Do not silently substitute mocks when claiming a live integration passed.

@@ -65,11 +65,11 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm --prefix frontend ci
-      - run: npm --prefix frontend run lint
-      - run: npm --prefix frontend run typecheck
-      - run: npm --prefix frontend run test
+          cache-dependency-path: package-lock.json
+      - run: npm ci --workspace frontend
+      - run: npm run --workspace frontend lint
+      - run: npm run --workspace frontend typecheck
+      - run: npm run --workspace frontend test
 
   e2e:
     name: End-to-End
@@ -87,20 +87,20 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: tests/package-lock.json
+          cache-dependency-path: package-lock.json
       - uses: astral-sh/setup-uv@v10.3.2
         with:
           version: "0.13.5"
-      - run: npm --prefix tests ci
-      - run: npm --prefix tests run typecheck
-      - run: npm --prefix tests exec -- playwright install --with-deps chromium
+      - run: npm ci --workspace tests
+      - run: npm run --workspace tests typecheck
+      - run: npm exec --workspace tests -- playwright install --with-deps chromium
       - run: docker compose up --build --detach --wait --wait-timeout 120
       - name: Database integration tests
         run: |
           uv run --all-packages --locked pytest -m integration
           docker compose exec -T worker python -m agora_worker --check
-      - run: npm --prefix tests run test:api
-      - run: npm --prefix tests run test:e2e
+      - run: npm run --workspace tests test:bruno
+      - run: npm run --workspace tests test:playwright
       - name: Service diagnostics
         if: always()
         run: |

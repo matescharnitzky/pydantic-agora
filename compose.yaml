@@ -88,7 +88,9 @@ services:
     networks: [backend]
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     environment:
       API_BASE_URL: http://api:8000
       HOSTNAME: 0.0.0.0

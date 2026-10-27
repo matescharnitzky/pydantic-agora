@@ -10,6 +10,8 @@ The frontend follows [Next.js project structure](https://nextjs.org/docs/app/get
 
 The worker uses `__main__.py` for `python -m agora_worker`, including startup, database checks, and shutdown. Settings live in `config.py`. DBOS is not installed yet; its [integration guide](https://docs.dbos.dev/python/integrating-dbos) initializes DBOS in the application entry point without prescribing a directory layout.
 
+JavaScript dependencies use a root npm workspace containing `frontend` and `tests`, with one root `package-lock.json`. Each workspace declares its own dependencies. `tests/bruno` contains HTTP API checks; `tests/playwright` contains browser checks.
+
 ## Install and check
 
 ```sh
@@ -17,7 +19,7 @@ make install
 make check
 ```
 
-`make check` runs Ruff, Pyright, Python unit tests, ESLint, TypeScript, and frontend unit tests. Run individual JavaScript commands with `npm --prefix frontend run lint` or `npm --prefix tests run typecheck`.
+`make check` runs Ruff, Pyright, Python unit tests, ESLint, TypeScript, and frontend unit tests. Run individual JavaScript commands with `npm run --workspace frontend lint` or `npm run --workspace tests typecheck`.
 
 ## Running stack
 
@@ -49,11 +51,11 @@ Browse **Databases → agora → Schemas → public → Tables**, or open Query 
 Install the browser once, then test the running stack:
 
 ```sh
-npm --prefix tests exec -- playwright install chromium
+npm exec --workspace tests -- playwright install chromium
 make smoke
 ```
 
-Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm --prefix tests run test:api -- --env-var baseUrl=http://127.0.0.1:8000`.
+Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm run --workspace tests test:bruno -- --env-var baseUrl=http://127.0.0.1:8000`.
 
 Run Python integration tests against local PostgreSQL, using the matching credentials if overridden:
 
@@ -69,13 +71,13 @@ Start PostgreSQL, then run each application in a separate terminal:
 docker compose up --detach --wait postgres
 uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host 127.0.0.1
 uv run --all-packages --locked python -m agora_worker
-npm --prefix frontend run dev
+npm run --workspace frontend dev
 ```
 
 direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://127.0.0.1:8000`. Compose sets it to `http://api:8000`.
 
 ## Containers and CI
 
-Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. Each image uses `uv sync --frozen` to install its selected service and runtime dependencies from the shared lockfile, and copies only its own dependency declaration and source. CI validates the full workspace lockfile separately with `--locked`. Hatchling builds each service's installable Python package from its `src/` directory. Python runtime images copy only the installed virtual environment from the build stage; uv, source trees, and dependency files stay in the build stage. The frontend runtime similarly copies only Next.js build output.
+Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. Each image uses `uv sync --frozen` to install its selected service and runtime dependencies from the shared lockfile, and copies only its own dependency declaration and source. CI validates the full workspace lockfile separately with `--locked`. Hatchling builds each service's installable Python package from its `src/` directory. Python runtime images copy only the installed virtual environment from the build stage; uv, source trees, and dependency files stay in the build stage. Build the frontend from the repository root with `docker build -f frontend/Dockerfile .`. It installs only the frontend npm workspace; its runtime copies only Next.js standalone output and static assets.
 
 GitHub Actions reports five checks: **Repo Checks** runs shared Python linting and type checks; **API** and **Worker** run their own unit tests with service-specific dependencies; **Frontend** runs its lint, type, and unit checks; **End-to-End** starts the application and runs database, API, and browser tests. Live-model evaluations remain separately invoked.
