@@ -1,6 +1,8 @@
-# Development
+---
+title: Development
+---
 
-Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; the root `.python-version` selects Python 3.13 for uv. The root uv workspace shares one development environment and lockfile.
+Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](./configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; the root `.python-version` selects Python 3.13 for uv. The root uv workspace shares one development environment and lockfile.
 
 ## Source layout
 
@@ -31,6 +33,10 @@ make down
 ```
 
 `make up` starts the frontend, API, worker, and PostgreSQL. `make down` also removes the optional pgAdmin container and preserves data volumes. The API's `/health` endpoint checks process liveness; `/ready` checks PostgreSQL. The worker verifies connectivity and handles shutdown; it does not execute capabilities yet.
+
+## Documentation
+
+Open [Documentation](http://localhost:3000/docs) after `make up`. Fumadocs renders the root `docs/*.md` files through the frontend, including Mermaid diagrams and search. Edit these Markdown files directly; run `make up` again to rebuild the container after changes. Native frontend development reloads documentation changes automatically.
 
 ## Database browser
 

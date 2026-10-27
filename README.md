@@ -27,3 +27,5 @@ make smoke  # Requires the running stack and Playwright Chromium
 ```
 
 See [development commands and pgAdmin login](docs/development.md), [architecture](docs/architecture.md), and [contributor guidance](AGENTS.md). Planned work is tracked in [GitHub issues](https://github.com/matescharnitzky/pydantic-agora/issues).
+
+Browse the rendered [documentation](http://localhost:3000/docs) while the stack is running. Sources live in `docs/`.

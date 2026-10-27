@@ -1,4 +1,6 @@
-# Configuration
+---
+title: Configuration
+---
 
 Secrets live in **1Password → Development → pydantic-agora**. `.envrc` fetches that item once, then explicitly lists each required field using `export_secret NAME`.
 

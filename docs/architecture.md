@@ -1,4 +1,6 @@
-# Architecture
+---
+title: Architecture
+---
 
 Agora has three independently deployed services: Next.js owns the UI, FastAPI owns HTTP contracts, and the Python worker owns execution. PostgreSQL stores application and future DBOS state; pgAdmin is an optional local inspection tool.
 

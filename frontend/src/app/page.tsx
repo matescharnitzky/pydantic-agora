@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ServiceStatus } from "@/app/_components/service-status";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export default async function Home() {
       <section aria-label="Service readiness" className="rounded-xl border border-stone-200 bg-white p-6">
         <ServiceStatus ready={ready} />
       </section>
+      <Link href="/docs" className="font-medium underline underline-offset-4">Documentation</Link>
       <footer className="text-sm leading-relaxed text-stone-500">
         Independent open-source project. Not affiliated with or endorsed by Pydantic.
       </footer>

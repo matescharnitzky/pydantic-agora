@@ -7,6 +7,7 @@ COPY package.json package-lock.json ./
 COPY frontend/package.json ./frontend/package.json
 RUN --mount=type=cache,target=/root/.npm npm ci --workspace frontend
 
+COPY docs ./docs
 COPY frontend ./frontend
 RUN npm run build --workspace frontend
 
