@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   let ready = false;
   try {
-    const response = await fetch(`${process.env.API_BASE_URL ?? "http://127.0.0.1:8000"}/ready`, {
+    const response = await fetch(`${process.env.API_BASE_URL ?? "http://localhost:8000"}/ready`, {
       cache: "no-store",
       signal: AbortSignal.timeout(3000),
     });

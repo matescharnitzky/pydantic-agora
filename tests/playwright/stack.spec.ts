@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("local shell reflects the running API and PostgreSQL readiness", async ({ page, request }) => {
-  const response = await request.get(`${process.env.API_BASE_URL ?? "http://127.0.0.1:8000"}/ready`);
+  const response = await request.get(`${process.env.API_BASE_URL ?? "http://localhost:8000"}/ready`);
   expect(response.status()).toBe(200);
   expect(await response.json()).toEqual({ status: "ok", service: "api" });
 

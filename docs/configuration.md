@@ -41,8 +41,8 @@ Credentials and other secrets are fetched from **Development → pydantic-agora*
 | `POSTGRES_USER` | 1Password, required | PostgreSQL username; use the existing local role (`agora`) |
 | `PGADMIN_EMAIL` | 1Password, required | pgAdmin login email; use the existing local account |
 | `COMPOSE_DISABLE_ENV_FILE` | `.envrc` and Makefile | `1` disables automatic `.env` loading |
-| `API_BASE_URL` | Optional override | Defaults to `http://127.0.0.1:8000`; Compose uses `http://api:8000` |
-| `FRONTEND_BASE_URL` | Optional override | Browser test target; defaults to `http://127.0.0.1:3000` |
+| `API_BASE_URL` | Optional override | Defaults to `http://localhost:8000`; Compose uses `http://api:8000` |
+| `FRONTEND_BASE_URL` | Optional override | Browser test target; defaults to `http://localhost:3000` |
 
 API and worker construct their PostgreSQL connection strings from `POSTGRES_*` settings and escape special characters in credentials. No `DATABASE_URL` or `COMPOSE_DATABASE_URL` fields are needed; existing fields with those names in 1Password are ignored. The host is the only connection setting that changes between native processes and containers.
 

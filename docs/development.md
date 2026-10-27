@@ -44,7 +44,7 @@ Open [Documentation](http://localhost:3000/docs) after `make up`. Fumadocs rende
 make pgadmin
 ```
 
-Open [pgAdmin](http://127.0.0.1:5050) and sign in with `PGADMIN_EMAIL` and the pgAdmin password stored in 1Password. Expand **Servers → Agora → Agora local** and enter the PostgreSQL password from 1Password.
+Open [pgAdmin](http://localhost:5050) and sign in with `PGADMIN_EMAIL` and the pgAdmin password stored in 1Password. Expand **Servers → Agora → Agora local** and enter the PostgreSQL password from 1Password.
 
 For an existing pgAdmin connection created before the Compose rename, change its Host from `database` to `postgres`. New connections use `postgres`.
 
@@ -61,7 +61,7 @@ npm exec --workspace tests -- playwright install chromium
 make smoke
 ```
 
-Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm run --workspace tests test:bruno -- --env-var baseUrl=http://127.0.0.1:8000`.
+Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm run --workspace tests test:bruno -- --env-var baseUrl=http://localhost:8000`.
 
 Run Python integration tests against local PostgreSQL, using the matching credentials if overridden:
 
@@ -75,12 +75,12 @@ Start PostgreSQL, then run each application in a separate terminal:
 
 ```sh
 docker compose up --detach --wait postgres
-uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host 127.0.0.1
+uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host localhost
 uv run --all-packages --locked python -m agora_worker
 npm run --workspace frontend dev
 ```
 
-direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://127.0.0.1:8000`. Compose sets it to `http://api:8000`.
+direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://localhost:8000`. Compose sets it to `http://api:8000`.
 
 ## Containers and CI
 

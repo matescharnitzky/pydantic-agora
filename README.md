@@ -10,9 +10,9 @@ Install Docker with Compose and follow [configuration setup](docs/configuration.
 make up
 ```
 
-- [Application](http://127.0.0.1:3000)
-- [API docs](http://127.0.0.1:8000/docs)
-- [pgAdmin](http://127.0.0.1:5050) — start separately with `make pgadmin`
+- [Application](http://localhost:3000)
+- [API docs](http://localhost:8000/docs)
+- [pgAdmin](http://localhost:5050) — start separately with `make pgadmin`
 
 Stop everything with `make down`. Database data is preserved. This is a local development stack; published ports bind to localhost.
 
