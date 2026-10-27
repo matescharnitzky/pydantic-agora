@@ -4,7 +4,7 @@ set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 
 if [[ $# -eq 0 ]]; then
-  echo 'Usage: scripts/with-env.sh command [arguments...]' >&2
+  echo 'Usage: scripts/1password.sh command [arguments...]' >&2
   exit 2
 fi
 environment_id=""

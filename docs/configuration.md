@@ -33,7 +33,7 @@ make down
 make smoke
 ```
 
-The Compose targets (`up`, `pgadmin`, and `down`) call `scripts/with-env.sh`. If a non-empty `OP_ENVIRONMENT_ID` is present in `.env`, the script uses `op run --env-file .env --environment ID` to inject secrets into the command. Otherwise, it runs Compose directly, which reads ordinary dotenv values or exported variables. Only users who configure an Environment ID need 1Password CLI.
+The Compose targets (`up`, `pgadmin`, and `down`) call `scripts/1password.sh`. If a non-empty `OP_ENVIRONMENT_ID` is present in `.env`, the script uses `op run --env-file .env --environment ID` to inject secrets into the command. Otherwise, it runs Compose directly, which reads ordinary dotenv values or exported variables. Only users who configure an Environment ID need 1Password CLI.
 
 Write the ID as one unquoted `OP_ENVIRONMENT_ID=your-id` line. 1Password parses the rest as dotenv data; the script does not source `.env` as shell code. Environment values take precedence over `.env` and inherited shell values. CI disables automatic dotenv loading, which also skips 1Password detection.
 
@@ -42,7 +42,7 @@ The wrapper preserves exit status and never prints resolved variables. 1Password
 `make smoke` tests the already-running services and needs no credentials. For a native command that needs the database credentials, use the helper directly:
 
 ```sh
-./scripts/with-env.sh uv run --all-packages --locked pytest -m integration
+./scripts/1password.sh uv run --all-packages --locked pytest -m integration
 ```
 
 Secrets are scoped to the command and its subprocesses; they do not remain in your terminal afterward. Coding agents use the same Make commands and may need you to approve a 1Password prompt. This is a convenience, not an access barrier: an injected command can access its environment. No direnv, `.envrc`, or mounted file is needed.

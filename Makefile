@@ -5,13 +5,13 @@ install:
 	npm ci
 
 up:
-	@./scripts/with-env.sh docker compose up --build --detach --wait
+	@./scripts/1password.sh docker compose up --build --detach --wait
 
 pgadmin:
-	@./scripts/with-env.sh docker compose up --detach --wait pgadmin
+	@./scripts/1password.sh docker compose up --detach --wait pgadmin
 
 down:
-	@./scripts/with-env.sh docker compose --profile tools down
+	@./scripts/1password.sh docker compose --profile tools down
 
 check:
 	uv run --all-packages --locked ruff check .

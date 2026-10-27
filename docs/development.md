@@ -71,7 +71,7 @@ uv run --env-file .env --all-packages --locked pytest -m integration
 
 ## Native development
 
-Start PostgreSQL, then run each application in a separate terminal. These commands assume credentials in a regular `.env`. If you keep credentials in 1Password, prefix commands with `./scripts/with-env.sh` (for example, `./scripts/with-env.sh uv run --all-packages --locked python -m agora_worker`).
+Start PostgreSQL, then run each application in a separate terminal. These commands assume credentials in a regular `.env`. If you keep credentials in 1Password, prefix commands with `./scripts/1password.sh` (for example, `./scripts/1password.sh uv run --all-packages --locked python -m agora_worker`).
 
 ```sh
 docker compose up --detach --wait postgres
