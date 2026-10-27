@@ -1,0 +1,76 @@
+services:
+  api:
+    build:
+      target: development
+    develop:
+      watch:
+        - action: sync
+          path: ./api/src
+          target: /app/api/src
+          initial_sync: true
+          ignore: [__pycache__/]
+        - action: rebuild
+          path: ./api/pyproject.toml
+        - action: rebuild
+          path: ./api/Dockerfile
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock
+
+  worker:
+    build:
+      target: development
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./worker/src
+          target: /app/worker/src
+          initial_sync: true
+          ignore: [__pycache__/]
+        - action: rebuild
+          path: ./worker/pyproject.toml
+        - action: rebuild
+          path: ./worker/Dockerfile
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock
+
+  frontend:
+    build:
+      target: development
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app/frontend
+          initial_sync: true
+          ignore:
+            - node_modules/
+            - .next/
+            - .source/
+            - coverage/
+            - '*.tsbuildinfo'
+            - next-env.d.ts
+            - package.json
+            - Dockerfile
+            - Dockerfile.dockerignore
+        - action: sync
+          path: ./README.md
+          target: /app/README.md
+          initial_sync: true
+        - action: sync
+          path: ./docs
+          target: /app/docs
+          initial_sync: true
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/Dockerfile
+        - action: rebuild
+          path: ./frontend/Dockerfile.dockerignore
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./package-lock.json

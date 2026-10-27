@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Repo Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "0.13.5"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Validate Python lockfile and install dependencies
+        run: uv sync --all-packages --locked
+      - run: uv run --all-packages --locked ruff check .
+      - run: uv run --all-packages --locked ruff format --check .
+      - run: uv run --all-packages --locked pyright
+
+  services:
+    name: ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: API
+            package: agora-api
+            tests: api/tests
+          - name: Worker
+            package: agora-worker
+            tests: worker/tests
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "0.13.5"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --package ${{ matrix.service.package }} --group dev
+      - run: uv run --locked --package ${{ matrix.service.package }} --group dev pytest ${{ matrix.service.tests }} -m 'not integration'
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --workspace frontend
+      - run: npm run --workspace frontend lint
+      - run: npm run --workspace frontend typecheck
+      - run: npm run --workspace frontend test
+
+  e2e:
+    name: End-to-End
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Disposable credentials for this job's local database, not stored secrets.
+    env:
+      COMPOSE_DISABLE_ENV_FILE: "1"
+      POSTGRES_USER: agora
+      POSTGRES_PASSWORD: agora-ci
+      PGADMIN_EMAIL: admin@agora.example
+      PGADMIN_PASSWORD: pgadmin-ci
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "0.13.5"
+      - run: npm ci --workspace tests
+      - run: npm run --workspace tests typecheck
+      - run: npm exec --workspace tests -- playwright install --with-deps chromium
+      - run: docker compose up --build --detach --wait --wait-timeout 120
+      - name: Database integration tests
+        run: |
+          make test-db
+          docker compose exec -T worker python -m agora_worker --check
+      - run: npm run --workspace tests test:bruno
+      - run: npm run --workspace tests test:playwright
+      - name: Service diagnostics
+        if: always()
+        run: |
+          docker compose ps
+          docker compose logs --no-color
+      - uses: actions/upload-artifact@v7.0.2
+        if: failure()
+        with:
+          name: playwright-traces
+          path: tests/test-results
+          retention-days: 7
+      - name: Stop services
+        if: always()
+        run: docker compose down

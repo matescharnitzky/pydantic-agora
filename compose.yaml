@@ -1,0 +1,123 @@
+name: agora
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:9.18
+    user: "5050:5050"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Set PGADMIN_EMAIL in your shell or .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in your shell or .env}
+      PGADMIN_DISABLE_POSTFIX: "1"
+      PGADMIN_LISTEN_PORT: "5050"
+      PGADMIN_SERVER_JSON_FILE: /tmp/pgadmin-servers.json
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+    entrypoint: ["/venv/bin/python3", "/usr/local/bin/pgadmin.py"]
+    ports:
+      - "127.0.0.1:5050:5050"
+    configs:
+      - source: pgadmin-startup
+        target: /usr/local/bin/pgadmin.py
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/venv/bin/python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5050/misc/ping', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+    networks: [backend]
+
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [backend]
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [frontend, backend]
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "agora_worker", "--check"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [backend]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      API_BASE_URL: http://api:8000
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [frontend]
+
+networks:
+  frontend:
+  backend:
+
+configs:
+  pgadmin-startup:
+    file: ./scripts/pgadmin.py
+
+volumes:
+  postgres-data:
+  pgadmin-data:
