@@ -9,11 +9,15 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in your shell or .env}
       PGADMIN_DISABLE_POSTFIX: "1"
       PGADMIN_LISTEN_PORT: "5050"
+      PGADMIN_SERVER_JSON_FILE: /tmp/pgadmin-servers.json
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+    entrypoint: ["/venv/bin/python3", "/usr/local/bin/pgadmin.py"]
     ports:
       - "127.0.0.1:5050:5050"
     configs:
-      - source: pgadmin-servers
-        target: /pgadmin4/servers.json
+      - source: pgadmin-startup
+        target: /usr/local/bin/pgadmin.py
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
@@ -111,21 +115,8 @@ networks:
   backend:
 
 configs:
-  pgadmin-servers:
-    content: |
-      {
-        "Servers": {
-          "1": {
-            "Name": "Agora local",
-            "Group": "Agora",
-            "Host": "postgres",
-            "Port": 5432,
-            "MaintenanceDB": "${POSTGRES_DB:-postgres}",
-            "Username": "${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}",
-            "SSLMode": "prefer"
-          }
-        }
-      }
+  pgadmin-startup:
+    file: ./scripts/pgadmin.py
 
 volumes:
   postgres-data:

@@ -15,6 +15,7 @@ def test_readiness_fails_for_unreachable_database() -> None:
 
 
 @pytest.mark.integration
-@pytest.mark.skipif(not os.environ.get("POSTGRES_PASSWORD"), reason="POSTGRES_PASSWORD is required")
 def test_readiness_connects_to_postgres() -> None:
+    if not os.environ.get("POSTGRES_PASSWORD"):
+        pytest.fail("POSTGRES_PASSWORD is required for database integration tests", pytrace=False)
     assert check_database(Settings())
