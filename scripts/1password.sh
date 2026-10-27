@@ -3,9 +3,9 @@ set -euo pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 
+# With no command, open a shell for the development session.
 if [[ $# -eq 0 ]]; then
-  echo 'Usage: scripts/1password.sh command [arguments...]' >&2
-  exit 2
+  set -- "${SHELL:-/bin/sh}"
 fi
 environment_id=""
 if [[ "${COMPOSE_DISABLE_ENV_FILE:-}" != "1" && -f .env ]]; then
@@ -19,4 +19,4 @@ if [[ ! "$environment_id" =~ ^[a-zA-Z0-9_-]+$ ]]; then
   exit 2
 fi
 
-exec op run --env-file .env --environment "$environment_id" -- "$@"
+exec op run --env-file .env --environment "$environment_id" --no-masking -- "$@"

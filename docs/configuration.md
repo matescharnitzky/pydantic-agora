@@ -24,28 +24,32 @@ OP_ENVIRONMENT_ID=your-environment-id
 
 Keep `POSTGRES_USER`, `POSTGRES_PASSWORD`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `OPENAI_API_KEY`, and `LOGFIRE_TOKEN` in the Environment. Preserve existing database and pgAdmin credentials when switching configuration providers. Keep `POSTGRES_DB` in `.env` rather than duplicating it in 1Password.
 
-Install 1Password CLI and enable its integration in the desktop app, then use the same commands as everyone else:
+Install 1Password CLI and enable its integration in the desktop app. Load credentials once into a new development shell:
 
 ```sh
+make env
 make up
 make pgadmin
-make down
 make smoke
+# Run other commands in the same shell as needed.
+exit
 ```
 
-The Compose targets (`up`, `pgadmin`, and `down`) call `scripts/1password.sh`. If a non-empty `OP_ENVIRONMENT_ID` is present in `.env`, the script uses `op run --env-file .env --environment ID` to inject secrets into the command. Otherwise, it runs Compose directly, which reads ordinary dotenv values or exported variables. Only users who configure an Environment ID need 1Password CLI.
+`make env` opens a child shell with credentials loaded. `make up`, `make pgadmin`, and `make down` run Docker Compose directly; they do not fetch credentials themselves. Contributors using ordinary `.env` credentials skip `make env`.
 
-Write the ID as one unquoted `OP_ENVIRONMENT_ID=your-id` line. 1Password parses the rest as dotenv data; the script does not source `.env` as shell code. Environment values take precedence over `.env` and inherited shell values. CI disables automatic dotenv loading, which also skips 1Password detection.
+`scripts/1password.sh` reads one unquoted `OP_ENVIRONMENT_ID=your-id` line and loads the Environment through `op run --env-file .env --environment ID`. It passes the variables directly to the new shell, with output masking disabled to preserve terminal behavior. It does not source `.env` as shell code or write resolved credentials to disk. Environment values take precedence over local dotenv values and inherited shell values.
 
-The wrapper preserves exit status and never prints resolved variables. 1Password may reuse authorization, but prompt frequency depends on its settings and lock state, not the terminal session. Do not run commands that dump the environment or resolved Compose configuration.
+1Password may request authorization when the session starts; prompt frequency depends on its settings and lock state. Subsequent commands reuse the loaded credentials. If values change in 1Password, exit and start a new session. Locking 1Password does not revoke variables already loaded into running processes.
 
-`make smoke` tests the already-running services and needs no credentials. For a native command that needs the database credentials, use the helper directly:
+Credentials remain available to every process started inside that shell, including coding agents, until those processes exit. Exiting the shell leaves the original terminal unchanged; already-started containers retain their configured credentials until recreated or removed. Compose has its normal terminal display and no output masking. Avoid commands that print the environment or resolved Compose configuration.
+
+A Make command cannot change its parent terminal's environment, which is why `make env` starts a child shell. No direnv, `.envrc`, or mounted file is needed. If a coding agent uses fresh shells for each tool call, load credentials and run its command in one invocation:
 
 ```sh
 ./scripts/1password.sh uv run --all-packages --locked pytest -m integration
 ```
 
-Secrets are scoped to the command and its subprocesses; they do not remain in your terminal afterward. Coding agents use the same Make commands and may need you to approve a 1Password prompt. This is a convenience, not an access barrier: an injected command can access its environment. No direnv, `.envrc`, or mounted file is needed.
+The helper also supports ordinary commands when no Environment ID is configured; it runs them directly. CI disables dotenv loading and supplies its own disposable credentials.
 
 See [1Password's op run reference](https://www.1password.dev/cli/reference/commands/run).
 

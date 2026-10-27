@@ -1,17 +1,17 @@
-.PHONY: install up pgadmin down check test-api test-e2e smoke
+.PHONY: env install up pgadmin down check test-api test-e2e smoke
 
 install:
 	uv sync --all-packages --locked
 	npm ci
 
 up:
-	@./scripts/1password.sh docker compose up --build --detach --wait
+	docker compose up --build --detach --wait
 
 pgadmin:
-	@./scripts/1password.sh docker compose up --detach --wait pgadmin
+	docker compose up --detach --wait pgadmin
 
 down:
-	@./scripts/1password.sh docker compose --profile tools down
+	docker compose --profile tools down
 
 check:
 	uv run --all-packages --locked ruff check .
@@ -30,3 +30,6 @@ test-e2e:
 	npm run --workspace tests test:playwright
 
 smoke: test-api test-e2e
+
+env:
+	@./scripts/1password.sh
