@@ -78,6 +78,7 @@ jobs:
     # Disposable credentials for this job's local database, not stored secrets.
     env:
       COMPOSE_DISABLE_ENV_FILE: "1"
+      POSTGRES_USER: agora
       POSTGRES_PASSWORD: agora-ci
       PGADMIN_EMAIL: admin@agora.example
       PGADMIN_PASSWORD: pgadmin-ci

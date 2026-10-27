@@ -21,7 +21,7 @@ Use the exact names below: the OpenAI field is `OPENAI_API_KEY`, not `OPENAI_APY
 3. Add `eval "$(direnv hook zsh)"` to the end of `~/.zshrc`, then restart the shell.
 4. Review `.envrc` and run `direnv allow` in the repository. Approve the 1Password access prompt. Run `make up` once the variables have loaded.
 
-Use `direnv reload` after changing values in 1Password. direnv unloads the project variables when you leave the directory. For a shell without the hook, use `direnv exec . make up` after allowing the file. Resolved secrets are available to processes launched from that shell; do not print the environment or resolved Compose configuration into logs.
+Use `direnv reload` after changing values in 1Password; direnv does not detect those changes automatically. Compose requires both `POSTGRES_USER` and `POSTGRES_PASSWORD` rather than choosing a fallback username. direnv unloads the project variables when you leave the directory. For a shell without the hook, use `direnv exec . make up` after allowing the file. Resolved secrets are available to processes launched from that shell; do not print the environment or resolved Compose configuration into logs.
 
 `.envrc` and the Makefile set `COMPOSE_DISABLE_ENV_FILE=1` to disable Compose's automatic `.env` loading. Application settings read process environment variables, not dotenv files. The root `.env` file is neither required nor used by these commands; remove any old local copy yourself once no longer needed.
 
@@ -38,7 +38,7 @@ Credentials and other secrets are fetched from **Development → pydantic-agora*
 | `POSTGRES_HOST` | `.envrc` | `localhost` locally; Compose sets `postgres` inside API/worker containers |
 | `POSTGRES_PORT` | `.envrc` | `5432` |
 | `POSTGRES_DB` | `.envrc` | `agora` |
-| `POSTGRES_USER` | 1Password, required | PostgreSQL username; use the existing local role (`agora`) |
+| `POSTGRES_USER` | 1Password, required | PostgreSQL username; initializes the role on first startup and must match it afterward |
 | `PGADMIN_EMAIL` | 1Password, required | pgAdmin login email; use the existing local account |
 | `COMPOSE_DISABLE_ENV_FILE` | `.envrc` and Makefile | `1` disables automatic `.env` loading |
 | `API_BASE_URL` | Optional override | Defaults to `http://localhost:8000`; Compose uses `http://api:8000` |
