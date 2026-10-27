@@ -4,11 +4,19 @@ An independent playground for exploring the Pydantic AI ecosystem. Not affiliate
 
 ## Run locally
 
-Install Docker with Compose and follow [configuration setup](docs/configuration.md), then run:
+Install Docker with Compose. Create your local configuration:
+
+```sh
+cp .env.example .env
+```
+
+Set the four credential values in `.env`, then start the stack:
 
 ```sh
 make up
 ```
+
+If you use 1Password, put only `OP_ENVIRONMENT_ID` and local settings such as `POSTGRES_DB=postgres` in `.env`. The same `make up` command loads credentials automatically. See [configuration setup](docs/configuration.md).
 
 - [Application](http://localhost:3000)
 - [API docs](http://localhost:8000/docs)

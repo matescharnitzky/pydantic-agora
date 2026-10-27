@@ -2,7 +2,7 @@
 title: Development
 ---
 
-Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](./configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; the root `.python-version` selects Python 3.13 for uv. The root uv workspace shares one development environment and lockfile.
+Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm. Follow [configuration setup](./configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; the root `.python-version` selects Python 3.13 for uv. The root uv workspace shares one development environment and lockfile.
 
 ## Source layout
 
@@ -44,13 +44,13 @@ Open [Documentation](http://localhost:3000/docs) after `make up`. Fumadocs rende
 make pgadmin
 ```
 
-Open [pgAdmin](http://localhost:5050) and sign in with `PGADMIN_EMAIL` and the pgAdmin password stored in 1Password. Expand **Servers → Agora → Agora local** and enter the PostgreSQL password from 1Password.
+Open [pgAdmin](http://localhost:5050) and sign in with your configured `PGADMIN_EMAIL` and `PGADMIN_PASSWORD`. Expand **Servers → Agora → Agora local** and enter your `POSTGRES_PASSWORD`.
 
 For an existing pgAdmin connection created before the Compose rename, change its Host from `database` to `postgres`. New connections use `postgres`.
 
 The server connection is imported on first startup with the configured `POSTGRES_DB` and `POSTGRES_USER`. If these change later, update the saved pgAdmin connection too. pgAdmin sign-in credentials also initialize on first startup; change an existing account's password within pgAdmin.
 
-Browse **Databases → agora → Schemas → public → Tables**, or open Query Tool. There are no application tables until Phase 2. Settings persist in a separate volume. Use `docker compose stop pgadmin` to stop only this tool.
+Browse **Databases → postgres → Schemas → public → Tables**, or open Query Tool. There are no application tables until Phase 2. Settings persist in a separate volume. Use `docker compose stop pgadmin` to stop only this tool.
 
 ## API, browser, and database tests
 
@@ -66,21 +66,21 @@ Bruno checks the running API; Playwright checks browser-to-database readiness. N
 Run Python integration tests against local PostgreSQL, using the matching credentials if overridden:
 
 ```sh
-uv run --all-packages --locked pytest -m integration
+uv run --env-file .env --all-packages --locked pytest -m integration
 ```
 
 ## Native development
 
-Start PostgreSQL, then run each application in a separate terminal:
+Start PostgreSQL, then run each application in a separate terminal. These commands assume credentials in a regular `.env`. If you keep credentials in 1Password, prefix commands with `./scripts/with-env.sh` (for example, `./scripts/with-env.sh uv run --all-packages --locked python -m agora_worker`).
 
 ```sh
 docker compose up --detach --wait postgres
-uv run --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host localhost
-uv run --all-packages --locked python -m agora_worker
+uv run --env-file .env --all-packages --locked uvicorn agora_api.main:create_app --factory --reload --host localhost
+uv run --env-file .env --all-packages --locked python -m agora_worker
 npm run --workspace frontend dev
 ```
 
-direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://localhost:8000`. Compose sets it to `http://api:8000`.
+The commands above load the root `.env` for native Python processes; Compose overrides the host to `postgres`. Each Python service constructs its connection URL from these settings. Frontend `API_BASE_URL` is server-only and defaults to `http://localhost:8000`. Compose sets it to `http://api:8000`.
 
 ## Containers and CI
 

@@ -1,5 +1,3 @@
-export COMPOSE_DISABLE_ENV_FILE := 1
-
 .PHONY: install up pgadmin down check test-api test-e2e smoke
 
 install:
@@ -7,13 +5,13 @@ install:
 	npm ci
 
 up:
-	docker compose up --build --detach --wait
+	@./scripts/with-env.sh docker compose up --build --detach --wait
 
 pgadmin:
-	docker compose up --detach --wait pgadmin
+	@./scripts/with-env.sh docker compose up --detach --wait pgadmin
 
 down:
-	docker compose --profile tools down
+	@./scripts/with-env.sh docker compose --profile tools down
 
 check:
 	uv run --all-packages --locked ruff check .

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     postgres_host: str = "localhost"
     postgres_port: int = 5432
-    postgres_db: str = "agora"
+    postgres_db: str = "postgres"
     postgres_user: str = "agora"
     postgres_password: SecretStr = SecretStr("")
 

@@ -6,8 +6,8 @@ services:
     profiles: [tools]
     user: "5050:5050"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Load pgAdmin credentials with direnv allow}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Load pgAdmin credentials with direnv allow}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Set PGADMIN_EMAIL in your shell or .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in your shell or .env}
       PGADMIN_DISABLE_POSTFIX: "1"
       PGADMIN_LISTEN_PORT: "5050"
     ports:
@@ -31,9 +31,9 @@ services:
   postgres:
     image: postgres:17-bookworm
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-agora}
-      POSTGRES_USER: ${POSTGRES_USER:?Load PostgreSQL credentials with direnv allow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -52,9 +52,9 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
-      POSTGRES_DB: ${POSTGRES_DB:-agora}
-      POSTGRES_USER: ${POSTGRES_USER:?Load PostgreSQL credentials with direnv allow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -74,9 +74,9 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"
-      POSTGRES_DB: ${POSTGRES_DB:-agora}
-      POSTGRES_USER: ${POSTGRES_USER:?Load PostgreSQL credentials with direnv allow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Load PostgreSQL credentials with direnv allow}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL credentials in your shell or .env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,8 +121,8 @@ configs:
             "Group": "Agora",
             "Host": "postgres",
             "Port": 5432,
-            "MaintenanceDB": "${POSTGRES_DB:-agora}",
-            "Username": "${POSTGRES_USER:?Load PostgreSQL credentials with direnv allow}",
+            "MaintenanceDB": "${POSTGRES_DB:-postgres}",
+            "Username": "${POSTGRES_USER:?Set PostgreSQL credentials in your shell or .env}",
             "SSLMode": "prefer"
           }
         }
