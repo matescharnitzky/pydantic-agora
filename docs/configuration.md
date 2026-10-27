@@ -16,40 +16,40 @@ Exported shell variables take precedence over `.env`. Native Python processes do
 
 ## Local configuration with 1Password
 
-Keep credentials in a 1Password Developer Environment. Your ignored `.env` contains its ID and non-secret local settings:
+Keep credentials in a 1Password vault item. Your ignored `.env` contains secret references instead of secret values. For example, using the `pydantic-agora` item in the `Development` vault:
 
 ```dotenv
-OP_ENVIRONMENT_ID=your-environment-id
+POSTGRES_USER=op://Development/pydantic-agora/POSTGRES_USER
+POSTGRES_PASSWORD=op://Development/pydantic-agora/POSTGRES_PASSWORD
+PGADMIN_EMAIL=op://Development/pydantic-agora/PGADMIN_EMAIL
+PGADMIN_PASSWORD=op://Development/pydantic-agora/PGADMIN_PASSWORD
+OPENAI_API_KEY=op://Development/pydantic-agora/OPENAI_API_KEY
+LOGFIRE_TOKEN=op://Development/pydantic-agora/LOGFIRE_TOKEN
 ```
 
-Keep `POSTGRES_USER`, `POSTGRES_PASSWORD`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `OPENAI_API_KEY`, and `LOGFIRE_TOKEN` in the Environment. Preserve existing database and pgAdmin credentials when switching configuration providers. Keep `POSTGRES_DB` in `.env` rather than duplicating it in 1Password.
+Use your own vault, item, and field names. The last two fields are optional for the current foundation; omit them or leave them empty if unused. `POSTGRES_DB` defaults to `postgres` and needs no entry.
 
-Install 1Password CLI and enable its integration in the desktop app. Load credentials once into a new development shell:
+Install 1Password CLI and enable its desktop app integration, then use the ordinary commands:
 
 ```sh
-make env
 make up
 make pgadmin
-make smoke
-# Run other commands in the same shell as needed.
-exit
+make down
 ```
 
-`make env` opens a child shell with credentials loaded. `make up`, `make pgadmin`, and `make down` run Docker Compose directly; they do not fetch credentials themselves. Contributors using ordinary `.env` credentials skip `make env`.
+These targets call `scripts/1password.sh`. When `.env` contains secret references, it runs `op run --env-file .env --no-masking -- command args...`. Otherwise, it runs the command directly without requiring 1Password. CI bypasses reference detection with `COMPOSE_DISABLE_ENV_FILE=1`.
 
-`scripts/1password.sh` reads one unquoted `OP_ENVIRONMENT_ID=your-id` line and loads the Environment through `op run --env-file .env --environment ID`. It passes the variables directly to the new shell, with output masking disabled to preserve terminal behavior. It does not source `.env` as shell code or write resolved credentials to disk. Environment values take precedence over local dotenv values and inherited shell values.
+Credentials are available only to the command and its child processes; your terminal's environment stays unchanged. The helper does not write resolved credentials to disk. Already-started containers retain their configured credentials until recreated or removed.
 
-1Password may request authorization when the session starts; prompt frequency depends on its settings and lock state. Subsequent commands reuse the loaded credentials. If values change in 1Password, exit and start a new session. Locking 1Password does not revoke variables already loaded into running processes.
+Output masking is disabled so Compose keeps its normal terminal display. Avoid commands that print the environment or resolved Compose configuration. 1Password may request authorization; prompt frequency depends on its settings and lock state. Each invocation fetches the current values without opening a credential-loaded shell.
 
-Credentials remain available to every process started inside that shell, including coding agents, until those processes exit. Exiting the shell leaves the original terminal unchanged; already-started containers retain their configured credentials until recreated or removed. Compose has its normal terminal display and no output masking. Avoid commands that print the environment or resolved Compose configuration.
-
-A Make command cannot change its parent terminal's environment, which is why `make env` starts a child shell. No direnv, `.envrc`, or mounted file is needed. If a coding agent uses fresh shells for each tool call, load credentials and run its command in one invocation:
+For native commands requiring credentials, use the same helper:
 
 ```sh
 ./scripts/1password.sh uv run --all-packages --locked pytest -m integration
 ```
 
-The helper also supports ordinary commands when no Environment ID is configured; it runs them directly. CI disables dotenv loading and supplies its own disposable credentials.
+No direnv, `.envrc`, mounted file, or Developer Environment is required. Preserve existing database and pgAdmin credentials when switching configuration providers.
 
 See [1Password's op run reference](https://www.1password.dev/cli/reference/commands/run).
 
@@ -57,7 +57,6 @@ See [1Password's op run reference](https://www.1password.dev/cli/reference/comma
 
 | Variable | Requirement | Purpose / default |
 |---|---|---|
-| `OP_ENVIRONMENT_ID` | Optional | 1Password Environment ID; not a credential |
 | `POSTGRES_USER` | Required by Compose | Database role; initializes it on first startup |
 | `POSTGRES_PASSWORD` | Required by Compose | Database password |
 | `PGADMIN_EMAIL` | Required by Compose | Initial pgAdmin login email |
@@ -78,6 +77,6 @@ Compose maps `PGADMIN_EMAIL` and `PGADMIN_PASSWORD` to the `PGADMIN_DEFAULT_EMAI
 
 ## Existing data and CI
 
-PostgreSQL and pgAdmin initialize credentials only when their data volumes are first created. Updating `.env` or a 1Password Environment does not change an existing database role or pgAdmin account password; rotate those separately if needed.
+PostgreSQL and pgAdmin initialize credentials only when their data volumes are first created. Updating `.env` or a 1Password vault item does not change an existing database role or pgAdmin account password; rotate those separately if needed.
 
 CI uses explicit disposable test credentials and disables automatic `.env` loading. It requires neither 1Password nor direnv.

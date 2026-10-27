@@ -3,20 +3,15 @@ set -euo pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 
-# With no command, open a shell for the development session.
 if [[ $# -eq 0 ]]; then
-  set -- "${SHELL:-/bin/sh}"
-fi
-environment_id=""
-if [[ "${COMPOSE_DISABLE_ENV_FILE:-}" != "1" && -f .env ]]; then
-  environment_id=$(sed -n 's/^OP_ENVIRONMENT_ID=//p' .env)
-fi
-if [[ -z "$environment_id" ]]; then
-  exec "$@"
-fi
-if [[ ! "$environment_id" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-  echo 'Set one unquoted OP_ENVIRONMENT_ID=your-id line in .env.' >&2
+  echo 'Usage: scripts/1password.sh command [args...]' >&2
   exit 2
 fi
 
-exec op run --env-file .env --environment "$environment_id" --no-masking -- "$@"
+# Ordinary .env files and exported variables work without 1Password.
+if [[ "${COMPOSE_DISABLE_ENV_FILE:-}" != "1" && -f .env ]] &&
+  grep -Eq '^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=.*op://' .env; then
+  exec op run --env-file .env --no-masking -- "$@"
+fi
+
+exec "$@"

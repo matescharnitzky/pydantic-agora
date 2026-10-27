@@ -63,7 +63,7 @@ make smoke
 
 Bruno checks the running API; Playwright checks browser-to-database readiness. Neither imports application internals. Override test targets with `FRONTEND_BASE_URL` and `API_BASE_URL`. For Bruno, use `npm run --workspace tests test:bruno -- --env-var baseUrl=http://localhost:8000`.
 
-Run Python integration tests against local PostgreSQL, using the matching credentials if overridden:
+Run Python integration tests against local PostgreSQL, using the matching credentials if overridden. For 1Password references, use `./scripts/1password.sh uv run --all-packages --locked pytest -m integration` instead:
 
 ```sh
 uv run --env-file .env --all-packages --locked pytest -m integration
@@ -71,7 +71,7 @@ uv run --env-file .env --all-packages --locked pytest -m integration
 
 ## Native development
 
-Start PostgreSQL, then run each application in a separate terminal. These commands assume credentials in a regular `.env`. If you keep credentials in 1Password, run `make env` first and launch these commands from that shell. For fresh agent tool shells, use `./scripts/1password.sh command args...`.
+Start PostgreSQL, then run each application in a separate terminal. These commands assume credentials in a regular `.env`. If `.env` contains 1Password references, prefix each Compose or Python command with `./scripts/1password.sh` and omit `--env-file .env` from `uv run`; the helper supplies the resolved variables for that command.
 
 ```sh
 docker compose up --detach --wait postgres

@@ -16,7 +16,7 @@ Set the four credential values in `.env`, then start the stack:
 make up
 ```
 
-If you use 1Password, put `OP_ENVIRONMENT_ID=your-environment-id` in `.env`, then run `make env` once to open a shell with credentials loaded. Run ordinary Make commands in that shell and `exit` when finished. See [configuration setup](docs/configuration.md).
+If you use 1Password, put `op://` secret references in `.env` instead of credential values. The same Make commands resolve them automatically for each Compose command. See [configuration setup](docs/configuration.md).
 
 - [Application](http://localhost:3000)
 - [API docs](http://localhost:8000/docs)
