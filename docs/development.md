@@ -32,7 +32,7 @@ docker compose logs -f
 make down
 ```
 
-`make up` starts the frontend, API, worker, and PostgreSQL. `make down` also removes the optional pgAdmin container and preserves data volumes. The API's `/health` endpoint checks process liveness; `/ready` checks PostgreSQL. The worker verifies connectivity and handles shutdown; it does not execute capabilities yet.
+`make up` starts the frontend, API, worker, PostgreSQL, and pgAdmin. `make down` removes the containers and preserves data volumes. The API's `/health` endpoint checks process liveness; `/ready` checks PostgreSQL. The worker verifies connectivity and handles shutdown; it does not execute capabilities yet.
 
 ## Documentation
 
@@ -40,11 +40,7 @@ Open [Documentation](http://localhost:3000/docs) after `make up`. Fumadocs rende
 
 ## Database browser
 
-```sh
-make pgadmin
-```
-
-Open [pgAdmin](http://localhost:5050) and sign in with your configured `PGADMIN_EMAIL` and `PGADMIN_PASSWORD`. Expand **Servers → Agora → Agora local** and enter your `POSTGRES_PASSWORD`.
+pgAdmin starts with `make up`. Open [pgAdmin](http://localhost:5050) and sign in with your configured `PGADMIN_EMAIL` and `PGADMIN_PASSWORD`. Expand **Servers → Agora → Agora local** and enter your `POSTGRES_PASSWORD`.
 
 For an existing pgAdmin connection created before the Compose rename, change its Host from `database` to `postgres`. New connections use `postgres`.
 

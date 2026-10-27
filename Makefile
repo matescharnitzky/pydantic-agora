@@ -1,4 +1,4 @@
-.PHONY: install up pgadmin down check test-api test-e2e smoke
+.PHONY: install up down check test-api test-e2e smoke
 
 install:
 	uv sync --all-packages --locked
@@ -7,11 +7,8 @@ install:
 up:
 	@./scripts/1password.sh docker compose up --build --detach --wait
 
-pgadmin:
-	@./scripts/1password.sh docker compose up --detach --wait pgadmin
-
 down:
-	@./scripts/1password.sh docker compose --profile tools down
+	@./scripts/1password.sh docker compose down
 
 check:
 	uv run --all-packages --locked ruff check .

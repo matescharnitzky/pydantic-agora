@@ -20,7 +20,7 @@ If you use 1Password, put `op://` secret references in `.env` instead of credent
 
 - [Application](http://localhost:3000)
 - [API docs](http://localhost:8000/docs)
-- [pgAdmin](http://localhost:5050) — start separately with `make pgadmin`
+- [pgAdmin](http://localhost:5050)
 
 Stop everything with `make down`. Database data is preserved. This is a local development stack; published ports bind to localhost.
 

@@ -33,7 +33,6 @@ Install 1Password CLI and enable its desktop app integration, then use the ordin
 
 ```sh
 make up
-make pgadmin
 make down
 ```
 
@@ -69,7 +68,7 @@ See [1Password's op run reference](https://www.1password.dev/cli/reference/comma
 | `API_BASE_URL` | Optional | `http://localhost:8000`; Compose uses `http://api:8000` |
 | `FRONTEND_BASE_URL` | Optional | Browser test target; `http://localhost:3000` |
 
-Compose currently validates pgAdmin credentials even when its optional profile is not started, so provide all four required variables. Additional variables in `.env` are not automatically passed into containers.
+Provide all four required variables for PostgreSQL and pgAdmin. Additional variables in `.env` are not automatically passed into containers.
 
 API and worker construct PostgreSQL connection strings from `POSTGRES_*` settings and escape special characters in credentials. No `DATABASE_URL` or `COMPOSE_DATABASE_URL` fields are needed.
 
