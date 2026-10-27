@@ -1,26 +1,44 @@
 # Working on Agora
 
-Agora is an independent open-source playground for the Pydantic ecosystem, not affiliated with or endorsed by Pydantic.
+Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed by Pydantic.
 
 ## Architecture
 
-- Keep the flat service-oriented monorepo: `frontend`, `api`, and `worker` are independent deployables with their own dependencies and Dockerfiles. API and worker share a root uv workspace, lockfile, and development environment; each container installs only its selected service and runtime dependencies.
-- The frontend owns presentation. FastAPI owns HTTP contracts and validation. The worker owns execution. PostgreSQL stores application and, later, DBOS state.
-- Do not import API internals into the worker or worker internals into the API. Do not introduce a shared package, an `apps` wrapper, a message broker, or a plugin framework without a demonstrated need and an explicit decision.
-- Reuse upstream Pydantic functionality through thin adapters. Follow the current issue scope; durable execution feasibility comes after the foundation.
-- Keep user authentication and authorization implementation in Phase 7. Before then, run only locally or inside controlled private development infrastructure. Bind local published ports to loopback. Never expose an unauthenticated execution service publicly.
-- Do not equate sandboxing with authorization, DBOS durability with exactly-once external effects, or a healthy worker shell with a validated execution runtime.
+- Follow the service responsibilities in [architecture.md](docs/architecture.md). Keep services independently deployable.
+- API and worker must not import each other's internals. Introduce shared packages or infrastructure only when there is a demonstrated need and an agreed design.
 
-## Development and verification
+## Coding standards
 
-- Use Python 3.13 with the root uv workspace, Ruff, Pyright strict mode, and pytest. Commit the root uv lockfile. Declare runtime dependencies in each service’s `pyproject.toml` and common development tools/configuration at the root.
-- Use Node 24 and its bundled npm. Keep TypeScript strict, ESLint, Vitest, and the root npm workspace lockfile reproducible.
-- `make install` installs dependencies. `make check` runs static checks and unit tests. `make up` builds and starts the full stack; `make smoke` runs black-box tests against it.
-- Run Python checks from the root with `uv run --all-packages --locked`. Use `uv run --package agora-api` or `uv run --package agora-worker` for a service command. Black-box commands run from `tests` and must use only HTTP/browser interfaces.
-- Run selected PostgreSQL integration checks with `POSTGRES_PASSWORD` and the matching `POSTGRES_*` settings loaded; see the Development section in `README.md`. Do not silently substitute mocks when claiming a live integration passed.
-- CI runs deterministic checks on pull requests. Keep expensive live-model evaluations separately invoked when introduced.
-- Do not add model credentials or production secrets to examples, tests, logs, or browser bundles. Read configuration from standard environment variables. Use a regular ignored root `.env` for local configuration. With 1Password, keep `op://` references there. The Compose Make targets resolve them through `scripts/1password.sh` for each command without changing the parent shell. Use `make dev` for development in Docker with Compose Watch, and `make test-db` for database integration checks. The database test target resolves references through the helper before uv loads `.env`; inherited resolved values take precedence. Do not read or print resolved secret values or resolved Compose output. Do not copy `.env` into containers. 1Password is optional; no direnv or mounted files are required. Keep local `.env` files untracked; tracked configuration examples must contain no secret values. Variable documentation belongs in `README.md`.
+### Backend
 
-## Changes
+- Follow [pyproject.toml](pyproject.toml) for shared Python tools and rules, and [api/pyproject.toml](api/pyproject.toml) and [worker/pyproject.toml](worker/pyproject.toml) for service dependencies.
+- Follow [FastAPI's larger-application guidance](https://fastapi.tiangolo.com/tutorial/bigger-applications/) and the [official FastAPI template](https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend/app) as a reference for API organization.
+- Use Pydantic models for HTTP contracts and settings. Follow existing API and worker package conventions.
 
-Read the issue and `docs/architecture.md` before implementing. Add focused verification for observable behavior. Record commands run and any unverified limitations in the PR. Keep generated artifacts, virtual environments, and local plans untracked.
+### Frontend
+
+- Follow [package.json](package.json), [frontend/package.json](frontend/package.json), and [tests/package.json](tests/package.json) for workspace dependencies and scripts; use [tsconfig.json](frontend/tsconfig.json) and [eslint.config.mjs](frontend/eslint.config.mjs) for frontend code rules.
+- Follow [Next.js project structure](https://nextjs.org/docs/app/getting-started/project-structure) and existing component and styling conventions.
+- Use Server Components by default; add Client Components where browser APIs or interaction require them.
+
+### Documentation
+
+- Prefer concise, human-written documentation. LLM-generated text should be brief, reviewed, and written for people. Use plain language and Mermaid diagrams where you see fit.
+- Document implemented behavior. Remove repetition and historical discussion that merely narrates the code.
+- Keep setup and development instructions in [README.md](README.md) and architecture in [architecture.md](docs/architecture.md). Reference these instead of duplicating them.
+
+## Development and testing
+
+- Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
+- Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
+- Keep service tests with their service. Root `tests/` must use HTTP/browser interfaces without importing application internals.
+- Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
+- Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
+
+## Configuration and secrets
+
+- Follow the README and [.env.example](.env.example) for local `.env` setup. Keep local configuration ignored and examples free of real credentials.
+- Follow [compose.yaml](compose.yaml) for the running stack and [compose.dev.yaml](compose.dev.yaml) for development overrides.
+- Never print resolved secrets or resolved Compose configuration. Keep credentials out of images, logs, tests, and browser bundles.
+- Run locally or in controlled private development environments. Expose local Docker services only on localhost so other computers on the network cannot connect directly.
+- Keep generated artifacts, virtual environments, and local plans untracked.
