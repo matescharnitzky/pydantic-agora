@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS build
+FROM node:24-bookworm-slim AS dependencies
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -7,9 +7,20 @@ COPY package.json package-lock.json ./
 COPY frontend/package.json ./frontend/package.json
 RUN --mount=type=cache,target=/root/.npm npm ci --workspace frontend
 
+FROM dependencies AS build
+COPY README.md ./README.md
 COPY docs ./docs
 COPY frontend ./frontend
 RUN npm run build --workspace frontend
+
+FROM dependencies AS development
+COPY --chown=node:node README.md ./README.md
+COPY --chown=node:node docs ./docs
+COPY --chown=node:node frontend ./frontend
+RUN chown node:node /app/frontend /app/docs
+USER node
+EXPOSE 3000
+CMD ["npm", "exec", "--workspace", "frontend", "--", "next", "dev", "--hostname", "0.0.0.0"]
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

@@ -1,14 +1,23 @@
-.PHONY: install up down check test-api test-e2e smoke
+.PHONY: install up down reset check test-db test-bruno test-playwright smoke dev
+
+UV_ENV_FILE := $(if $(wildcard .env),--env-file .env)
 
 install:
 	uv sync --all-packages --locked
 	npm ci
+	npm exec --workspace tests -- playwright install chromium
 
 up:
 	@./scripts/1password.sh docker compose up --build --detach --wait
 
 down:
 	@./scripts/1password.sh docker compose down
+
+reset:
+	@./scripts/1password.sh docker compose down --volumes
+
+dev:
+	@./scripts/1password.sh docker compose -f compose.yaml -f compose.dev.yaml up --build --watch
 
 check:
 	uv run --all-packages --locked ruff check .
@@ -20,10 +29,13 @@ check:
 	npm run --workspace frontend test
 	npm run --workspace tests typecheck
 
-test-api:
+test-db:
+	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked pytest -m integration
+
+test-bruno:
 	npm run --workspace tests test:bruno
 
-test-e2e:
+test-playwright:
 	npm run --workspace tests test:playwright
 
-smoke: test-api test-e2e
+smoke: test-bruno test-playwright

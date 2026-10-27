@@ -2,7 +2,7 @@
 title: Architecture
 ---
 
-Agora has three independently deployed services: Next.js owns the UI, FastAPI owns HTTP contracts, and the Python worker owns execution. PostgreSQL stores application and future DBOS state; pgAdmin provides local database inspection.
+Next.js handles presentation, FastAPI owns HTTP contracts and validation, and the worker owns execution. PostgreSQL stores application state; pgAdmin provides database inspection.
 
 ```mermaid
 flowchart LR
@@ -13,4 +13,6 @@ flowchart LR
     pgAdmin[pgAdmin] -->|Inspect / query| Postgres
 ```
 
-The current worker checks connectivity and handles shutdown. DBOS, Monty, and capability execution follow in Phase 2. API and worker share a uv workspace and lockfile; their containers install only their own runtime dependencies. Published ports bind to localhost; authentication is planned for Phase 7.
+The current stack checks service and database readiness. The worker does not execute capabilities yet.
+
+API and worker share a uv workspace and lockfile, but each container installs only its own runtime dependencies. They do not import each other's internals. Frontend dependencies use npm workspaces.

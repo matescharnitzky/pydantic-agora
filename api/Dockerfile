@@ -18,6 +18,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --package agora-api \
         --no-dev --no-editable
 
+FROM build AS development
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/api/src" \
+    PYTHONUNBUFFERED=1
+RUN useradd --uid 10001 --create-home agora \
+    && chown -R agora:agora /app/api/src
+USER agora
+CMD ["uvicorn", "agora_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/api/src"]
+
 FROM python:3.13-slim-bookworm AS runtime
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" \

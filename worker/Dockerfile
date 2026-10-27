@@ -18,6 +18,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --package agora-worker \
         --no-dev --no-editable
 
+FROM build AS development
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/worker/src" \
+    PYTHONUNBUFFERED=1
+RUN useradd --uid 10001 --create-home agora \
+    && chown -R agora:agora /app/worker/src
+USER agora
+CMD ["python", "-m", "agora_worker"]
+
 FROM python:3.13-slim-bookworm AS runtime
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH" \

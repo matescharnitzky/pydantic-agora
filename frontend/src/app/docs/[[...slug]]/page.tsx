@@ -13,7 +13,7 @@ export default async function Page({ params }: Props) {
   const Content = page.data.body;
   return (
     <DocsPage toc={page.data.toc}>
-      <DocsTitle>{page.data.title}</DocsTitle>
+      {slug?.length ? <DocsTitle>{page.data.title}</DocsTitle> : null}
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <Content components={{ ...defaultMdxComponents, Mermaid, a: createRelativeLink(source, page) }} />
