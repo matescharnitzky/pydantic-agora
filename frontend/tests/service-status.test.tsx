@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
-import { ServiceStatus } from "@/components/service-status";
+import { ServiceStatus } from "@/app/_components/service-status";
 
 it.each([
   [true, "API and database are ready"],

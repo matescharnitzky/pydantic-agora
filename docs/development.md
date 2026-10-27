@@ -1,6 +1,14 @@
 # Development
 
-Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; uv selects a compatible interpreter. The root uv workspace shares one development environment and lockfile.
+Requirements: Docker with Compose, Python 3.13, uv, Node 24 with npm, direnv, and 1Password CLI. Follow [configuration setup](configuration.md) before starting services. Both Python services declare `requires-python = ">=3.13,<3.14"`; the root `.python-version` selects Python 3.13 for uv. The root uv workspace shares one development environment and lockfile.
+
+## Source layout
+
+The API follows [FastAPI’s larger-application guidance](https://fastapi.tiangolo.com/tutorial/bigger-applications/) and the [official full-stack template](https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend/app): `main.py` creates the app, `core/config.py` holds settings, `api/main.py` combines routers, `api/routes/` defines endpoints, and `models.py` defines response models. Route dependencies live in `api/deps.py`; route tests mirror the route directory.
+
+The frontend follows [Next.js project structure](https://nextjs.org/docs/app/getting-started/project-structure): routes live in `src/app`, page-specific components in `src/app/_components`, and reusable helpers in `src/lib`. Shared UI components can live in `src/components` when needed.
+
+The worker uses `__main__.py` for `python -m agora_worker`, including startup, database checks, and shutdown. Settings live in `config.py`. DBOS is not installed yet; its [integration guide](https://docs.dbos.dev/python/integrating-dbos) initializes DBOS in the application entry point without prescribing a directory layout.
 
 ## Install and check
 
@@ -70,4 +78,4 @@ direnv supplies the `POSTGRES_*` settings for local PostgreSQL; Compose override
 
 Build Python images from the repository root: `docker build -f api/Dockerfile .` or `docker build -f worker/Dockerfile .`. Each image uses `uv sync --frozen` to install its selected service and runtime dependencies from the shared lockfile, and copies only its own dependency declaration and source. CI validates the full workspace lockfile separately with `--locked`. Hatchling builds each service's installable Python package from its `src/` directory. Python runtime images copy only the installed virtual environment from the build stage; uv, source trees, and dependency files stay in the build stage. The frontend runtime similarly copies only Next.js build output.
 
-GitHub Actions reports five checks: **Code Quality** runs shared Python linting and type checks; **API** and **Worker** run their own unit tests with service-specific dependencies; **Frontend** runs its lint, type, and unit checks; **End-to-End** starts the application and runs database, API, and browser tests. Live-model evaluations remain separately invoked.
+GitHub Actions reports five checks: **Repo Checks** runs shared Python linting and type checks; **API** and **Worker** run their own unit tests with service-specific dependencies; **Frontend** runs its lint, type, and unit checks; **End-to-End** starts the application and runs database, API, and browser tests. Live-model evaluations remain separately invoked.

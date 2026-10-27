@@ -3,7 +3,7 @@ from urllib.parse import unquote, urlsplit
 import pytest
 from pydantic import SecretStr
 
-from agora_api.config import Settings
+from agora_api.core.config import Settings
 
 
 @pytest.mark.parametrize("host", ["localhost", "postgres"])

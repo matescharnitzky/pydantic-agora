@@ -1,4 +1,4 @@
-import { ServiceStatus } from "@/components/service-status";
+import { ServiceStatus } from "@/app/_components/service-status";
 
 export const dynamic = "force-dynamic";
 

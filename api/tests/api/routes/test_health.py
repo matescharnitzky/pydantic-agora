@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
-from agora_api.config import Settings
+from agora_api.core.config import Settings
 from agora_api.main import create_app
 
 
