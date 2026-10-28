@@ -25,7 +25,7 @@ ENV PATH="/app/.venv/bin:$PATH" \
 RUN useradd --uid 10001 --create-home agora \
     && chown -R agora:agora /app/api/src
 USER agora
-CMD ["uvicorn", "agora_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/api/src"]
+CMD ["uvicorn", "agora_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/api/src"]
 
 FROM python:3.13-slim-bookworm AS runtime
 WORKDIR /app
@@ -37,4 +37,4 @@ COPY --from=build /app/.venv /app/.venv
 
 USER agora
 EXPOSE 8000
-CMD ["uvicorn", "agora_api.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "agora_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

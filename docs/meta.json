@@ -1,3 +1,7 @@
 {
-  "pages": ["index", "architecture"]
+  "pages": [
+    "index",
+    "architecture",
+    "development-tooling"
+  ]
 }

@@ -25,7 +25,7 @@ ENV PATH="/app/.venv/bin:$PATH" \
 RUN useradd --uid 10001 --create-home agora \
     && chown -R agora:agora /app/worker/src
 USER agora
-CMD ["python", "-m", "agora_worker"]
+CMD ["python", "-m", "agora_worker.main"]
 
 FROM python:3.13-slim-bookworm AS runtime
 WORKDIR /app
@@ -36,4 +36,4 @@ RUN useradd --uid 10001 --create-home agora
 COPY --from=build /app/.venv /app/.venv
 
 USER agora
-CMD ["python", "-m", "agora_worker"]
+CMD ["python", "-m", "agora_worker.main"]

@@ -2,31 +2,6 @@
 
 Agora is a runtime for the Pydantic ecosystem. Not affiliated with or endorsed by Pydantic.
 
-## Tech stack
-
-### Services
-
-| Component | Technology |
-| --------- | ---------- |
-| Frontend service | [Next.js](https://nextjs.org/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/) (configured) |
-| API service | [FastAPI](https://fastapi.tiangolo.com/), [Pydantic](https://docs.pydantic.dev/), [Uvicorn](https://www.uvicorn.org/) |
-| Worker service | [Python](https://www.python.org/), [DBOS](https://docs.dbos.dev/) (planned) |
-| Database | [PostgreSQL](https://www.postgresql.org/), [pgAdmin](https://www.pgadmin.org/) |
-| Documentation | [Fumadocs](https://www.fumadocs.dev/), Markdown, [Mermaid](https://mermaid.js.org/) |
-
-### Development tooling
-
-| Component | Technology |
-| --------- | ---------- |
-| Coding agent | gpt-6.1-sol via [Codex](https://openai.com/codex/) |
-| Secrets | [1Password CLI](https://www.1password.dev/cli/) |
-| Containerization | [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/) |
-| Tests | [pytest](https://docs.pytest.org/), [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/), [Bruno](https://www.usebruno.com/) |
-| Code quality | [Ruff](https://docs.astral.sh/ruff/), [Pyright](https://github.com/microsoft/pyright), [ESLint](https://eslint.org/), [TypeScript strict mode](https://www.typescriptlang.org/tsconfig/strict.html) |
-| CI | [GitHub Actions](https://docs.github.com/en/actions) |
-| Package managers | [uv](https://docs.astral.sh/uv/) (Python), [npm](https://docs.npmjs.com/) (JavaScript) |
-| Node version manager | [nvm](https://github.com/nvm-sh/nvm) |
-
 ## Configuration
 
 ### Prerequisites
@@ -107,8 +82,8 @@ Use Python 3.13 and Node 24. Install host dependencies for checks and tests:
 ```sh
 make install  # Dependencies and Chromium for browser tests
 make check    # Lint, type checks, and unit tests
-make test-db  # Database integration tests; requires PostgreSQL
-make smoke    # API and browser tests; requires the running stack
+make test-db  # Database/worker integration tests; requires the running stack
+make smoke    # Bruno API and browser tests; requires the running stack
 ```
 
 Run development mode in Docker:

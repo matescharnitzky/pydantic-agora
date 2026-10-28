@@ -3,7 +3,7 @@ import logging
 import psycopg
 from fastapi import APIRouter, Response
 
-from agora_api.api.deps import SettingsDep
+from agora_api.config import settings
 from agora_api.models import Health
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ async def health() -> Health:
 
 
 @router.get("/ready", response_model=Health)
-async def ready(response: Response, settings: SettingsDep) -> Health:
+async def ready(response: Response) -> Health:
     """Readiness requires a successful PostgreSQL round trip."""
     try:
         async with await psycopg.AsyncConnection.connect(

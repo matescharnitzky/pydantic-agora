@@ -1,14 +1,28 @@
-from functools import lru_cache
+from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import Depends
+from dbos import DBOSClient, DBOSPortableJSONSerializer
+from fastapi import Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 
-from agora_api.core.config import Settings
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+from agora_api.config import settings
+from agora_api.services.workflows import APPLICATION_NAME
 
 
-SettingsDep = Annotated[Settings, Depends(get_settings)]
+def get_workflow_client() -> Iterator[DBOSClient]:
+    client = DBOSClient(
+        system_database_url=settings.dbos_database_url,
+        application_name=APPLICATION_NAME,
+        serializer=DBOSPortableJSONSerializer(),
+        lazy=True,
+        retry_connection_errors=False,
+    )
+    try:
+        yield client
+    except SQLAlchemyError:
+        raise HTTPException(status_code=503, detail="Workflow storage unavailable") from None
+    finally:
+        client.destroy()
+
+
+WorkflowClient = Annotated[DBOSClient, Depends(get_workflow_client)]

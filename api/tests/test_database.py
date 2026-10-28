@@ -1,15 +1,14 @@
 import os
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
-from agora_api.main import create_app
 
 
 @pytest.mark.integration
-def test_database_readiness() -> None:
+def test_database_readiness(app: FastAPI) -> None:
     if not os.environ.get("POSTGRES_PASSWORD"):
         pytest.fail("POSTGRES_PASSWORD is required for database integration tests", pytrace=False)
-    response = TestClient(create_app()).get("/ready")
+    response = TestClient(app).get("/ready")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "service": "api"}

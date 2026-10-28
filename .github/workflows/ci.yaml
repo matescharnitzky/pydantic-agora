@@ -99,7 +99,7 @@ jobs:
       - name: Database integration tests
         run: |
           make test-db
-          docker compose exec -T worker python -m agora_worker --check
+          docker compose exec -T worker python -m agora_worker.health
       - run: npm run --workspace tests test:bruno
       - run: npm run --workspace tests test:playwright
       - name: Service diagnostics
