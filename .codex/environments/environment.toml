@@ -1,0 +1,18 @@
+version = 1
+name = "agora"
+
+[setup]
+script = '''
+cp "$CODEX_SOURCE_TREE_PATH/.env" .env &&
+make install
+'''
+
+[[actions]]
+name = "Develop"
+icon = "run"
+command = "make dev"
+
+[[actions]]
+name = "Check"
+icon = "test"
+command = "make check"
