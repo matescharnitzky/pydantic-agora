@@ -54,15 +54,17 @@ The application works with the following environment variables.
 | `POSTGRES_HOST` | `localhost` natively; `postgres` inside Compose |
 | `POSTGRES_PORT` | `5432` |
 
+There are two ways to set them: either you can add them to a .env file
+or you can fetch them from a password manager like 1password.
+
 #### .env
 
-Copy `.env.example` to `.env`. Keep this file ignored and use `op://` references for secrets;
-do not save resolved credentials there.
+Copy `.env.example` to `.env` and set the required credentials.
 
 #### 1password
 
 Install [1Password CLI](https://www.1password.dev/cli/get-started) and enable its desktop app integration.
-Replace the secret placeholders in `.env` with references to your vault item.
+Replace values in `.env` with references to your vault item.
 For example, if you have a `Development` vault with a `my-project` item, your dotenv would look like:
 
 ```dotenv
