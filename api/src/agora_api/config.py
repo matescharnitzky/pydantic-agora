@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="", extra="ignore")
 
+    logfire_token: SecretStr = SecretStr("")
+
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_db: str = "postgres"

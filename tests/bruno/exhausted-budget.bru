@@ -1,0 +1,35 @@
+meta {
+  name: Retrieve a rejected call budget
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/workflows
+  body: json
+  auth: none
+}
+
+body:json {
+  {"operation":"add_then_scale","inputs":{"left":2,"right":3,"double_positive":true},"limits":{"max_calls":1}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  test("exhausted call budget remains retrievable", async function () {
+    const url = bru.getEnvVar("baseUrl") + "/workflows/" + res.getBody().id;
+    let workflow;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const response = await bru.sendRequest({ method: "GET", url });
+      expect(response.status).to.equal(200);
+      workflow = response.data;
+      if (["successful", "failed"].includes(workflow.status)) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    expect(workflow.status).to.equal("failed");
+    expect(workflow.error).to.equal("Step budget exhausted");
+  });
+}

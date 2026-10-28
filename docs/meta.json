@@ -2,6 +2,7 @@
   "pages": [
     "index",
     "architecture",
+    "workflow-policies",
     "development-tooling"
   ]
 }
