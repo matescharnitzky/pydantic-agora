@@ -1,7 +1,7 @@
 [project]
 name = "agora-worker"
 version = "0.1.0"
-description = "DBOS worker"
+description = "Agora worker service"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "dbos>=2.31.1,<3",
