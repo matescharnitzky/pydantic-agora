@@ -54,17 +54,12 @@ The application works with the following environment variables.
 | `POSTGRES_HOST` | `localhost` natively; `postgres` inside Compose |
 | `POSTGRES_PORT` | `5432` |
 
-There are two ways to set them: either you can add them to a .env file
-or you can fetch them from a password manager like 1password.
-
-#### .env
-
-Copy `.env.example` to `.env` and set the required credentials.
+Keep 1Password references in the ignored `.env` file; do not save resolved credentials there.
 
 #### 1password
 
 Install [1Password CLI](https://www.1password.dev/cli/get-started) and enable its desktop app integration.
-Replace values in `.env` with references to your vault item.
+Copy `.env.example` to `.env` and replace its placeholders with references to your vault item.
 For example, if you have a `Development` vault with a `my-project` item, your dotenv would look like:
 
 ```dotenv
@@ -116,3 +111,15 @@ Run development mode in Docker:
 ```sh
 make dev  # Start the stack and watch for changes; keep this terminal open
 ```
+
+### Remote development
+
+Start `make dev` while at the laptop and approve 1Password, then leave that process running
+and keep the laptop awake. The running Compose Watch process retains its authorized environment:
+source changes sync into containers, the API reloads, the worker restarts, and dependency changes
+trigger rebuilds according to `compose.dev.yaml`.
+
+Do not stop the watcher or run a separate `make up` during unattended work. If the process exits,
+restarting it may require another approval. New or rotated secrets also require restarting with
+approval. Use the existing HTTP/browser test targets against the running stack; `make test-db`
+starts a separate 1Password command and may need approval.
