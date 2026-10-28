@@ -40,7 +40,7 @@ Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed b
 - Follow the README and [.env.example](.env.example) for local `.env` setup. Keep local configuration ignored and examples free of real credentials.
 - Follow [compose.yaml](compose.yaml) for the running stack and [compose.dev.yaml](compose.dev.yaml) for development overrides.
 - For our development work, keep only `op://` secret references in `.env`; do not write resolved secrets to it. This does not restrict the user configuration options documented in the README.
-- For remote work, start `make dev` while the user is available to approve 1Password and keep the watcher running. See the README for its limits. Do not add a secrets cache or a credential-recovery wrapper.
+- For remote work, start `make dev` while the user is available to approve 1Password and keep the watcher running. Do not add a secrets cache or a credential-recovery wrapper.
 - Never print resolved secrets or resolved Compose configuration. Keep credentials out of images, logs, tests, and browser bundles.
 - Run locally or in controlled private development environments. Expose local Docker services only on localhost so other computers on the network cannot connect directly.
 - Keep generated artifacts, virtual environments, and local plans untracked.

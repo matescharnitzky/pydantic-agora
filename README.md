@@ -119,12 +119,4 @@ make dev  # Start the stack and watch for changes; keep this terminal open
 
 ### Remote development
 
-Start `make dev` while at the laptop and approve 1Password, then leave that process running
-and keep the laptop awake. The running Compose Watch process retains its authorized environment:
-source changes sync into containers, the API reloads, the worker restarts, and dependency changes
-trigger rebuilds according to `compose.dev.yaml`.
-
-Do not stop the watcher or run a separate `make up` during unattended work. If the process exits,
-restarting it may require another approval. New or rotated secrets also require restarting with
-approval. Use the existing HTTP/browser test targets against the running stack; `make test-db`
-starts a separate 1Password command and may need approval.
+Run `make dev`, approve 1Password, and keep the laptop awake with the process running.
