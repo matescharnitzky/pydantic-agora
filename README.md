@@ -116,3 +116,7 @@ Run development mode in Docker:
 ```sh
 make dev  # Start the stack and watch for changes; keep this terminal open
 ```
+
+### Remote development
+
+Run `make dev`, approve 1Password, and keep the laptop awake with the process running.
