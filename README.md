@@ -83,6 +83,7 @@ Use Python 3.13 and Node 24. Install host dependencies for checks and tests:
 make install  # Dependencies and Chromium for browser tests
 make check    # Lint, type checks, and unit tests
 make test-db  # Database/worker integration tests; requires the running stack
+make test-recovery    # Isolated crash/restart tests; requires PostgreSQL and host dependencies
 make smoke    # Bruno API and browser tests; requires the running stack
 ```
 

@@ -1,4 +1,4 @@
-.PHONY: install up down reset check test-db test-bruno test-playwright smoke dev
+.PHONY: install up down reset check test-db test-recovery test-bruno test-playwright smoke dev
 
 UV_ENV_FILE := $(if $(wildcard .env),--env-file .env)
 
@@ -30,7 +30,10 @@ check:
 	npm run --workspace tests typecheck
 
 test-db:
-	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked pytest -m integration
+	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked pytest -m "integration and not recovery"
+
+test-recovery:
+	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked pytest worker/tests/test_recovery.py -v -s
 
 test-bruno:
 	npm run --workspace tests test:bruno
