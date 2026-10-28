@@ -1,0 +1,37 @@
+meta {
+  name: Reject invalid operation inputs
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/workflows
+  body: json
+  auth: none
+}
+
+body:json {
+  {"operation":"add_then_scale","inputs":{"left":"two","right":3}}
+}
+
+assert {
+  res.status: eq 422
+}
+
+tests {
+  for (const [name, operation, inputs] of [
+    ["numeric string", "add_then_scale", { left: "1", right: 2 }],
+    ["boolean integer", "add_then_scale", { left: true, right: 2 }],
+    ["missing divisor", "divide_sum", { left: 1, right: 2 }],
+    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }]
+  ]) {
+    test("reject " + name, async function () {
+      await bru.sendRequest({
+        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
+        headers: { "Content-Type": "application/json" }, data: { operation, inputs }
+      }, (error, response) => {
+        expect(error ? error.status : response.status).to.equal(422);
+      });
+    });
+  }
+}

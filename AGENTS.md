@@ -13,7 +13,7 @@ Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed b
 
 - Follow [pyproject.toml](pyproject.toml) for shared Python tools and rules, and [api/pyproject.toml](api/pyproject.toml) and [worker/pyproject.toml](worker/pyproject.toml) for service dependencies.
 - Follow [FastAPI's larger-application guidance](https://fastapi.tiangolo.com/tutorial/bigger-applications/) and the [official FastAPI template](https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend/app) as a reference for API organization.
-- Use Pydantic models for HTTP contracts and settings. Follow existing API and worker package conventions.
+- Use Pydantic models for HTTP contracts and settings. Keep API dependencies in `api/deps.py`, business logic in `services/`, and route schemas in the central `models.py` for now.
 
 ### Frontend
 
@@ -29,9 +29,10 @@ Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed b
 
 ## Development and testing
 
+- Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>`; do not use `codex/`.
 - Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
 - Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
-- Keep service tests with their service. Root `tests/` must use HTTP/browser interfaces without importing application internals.
+- Keep service tests with their service. Use Bruno for HTTP/API integration tests and Playwright for browser journeys in root `tests/`, without importing application internals.
 - Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
 - Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
 

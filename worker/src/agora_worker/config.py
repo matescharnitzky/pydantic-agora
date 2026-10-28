@@ -23,3 +23,7 @@ class Settings(BaseSettings):
             password=quote(self.postgres_password.get_secret_value(), safe=""),
             path=quote(self.postgres_db, safe=""),
         )
+
+    @property
+    def dbos_database_url(self) -> str:
+        return str(self.database_url).replace("postgresql://", "postgresql+psycopg://", 1)

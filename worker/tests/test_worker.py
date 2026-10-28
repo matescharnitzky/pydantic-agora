@@ -3,8 +3,8 @@ import os
 import pytest
 from pydantic import SecretStr
 
-from agora_worker.__main__ import check_database
 from agora_worker.config import Settings
+from agora_worker.health import check_database
 
 
 def test_readiness_fails_for_unreachable_database() -> None:

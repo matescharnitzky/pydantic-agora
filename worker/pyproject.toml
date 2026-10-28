@@ -1,9 +1,13 @@
 [project]
 name = "agora-worker"
 version = "0.1.0"
-description = "Agora worker process; durable runtime integration follows in Phase 2"
+description = "Agora worker service"
 requires-python = ">=3.13,<3.14"
-dependencies = ["psycopg[binary]>=3.2,<4", "pydantic-settings>=2.7,<3"]
+dependencies = [
+    "dbos>=2.31.1,<3",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2.7,<3",
+]
 
 [build-system]
 requires = ["hatchling"]
