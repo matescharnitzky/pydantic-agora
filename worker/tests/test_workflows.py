@@ -18,6 +18,7 @@ def client() -> Iterator[DBOSClient]:
     client = DBOSClient(
         system_database_url=Settings().dbos_database_url,
         application_name="agora-worker",
+        dbos_system_schema=Settings().dbos_system_schema,
         serializer=DBOSPortableJSONSerializer(),
         retry_connection_errors=False,
     )
