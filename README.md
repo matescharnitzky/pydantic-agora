@@ -116,3 +116,20 @@ Run development mode in Docker:
 ```sh
 make dev  # Start the stack and watch for changes; keep this terminal open
 ```
+
+### Codex worktrees
+
+Select the **agora** local environment when creating a Codex worktree. Its setup
+in `.codex/environments/environment.toml` copies `.env` from the source checkout
+and runs `make install`. Configure `.env` in that checkout first and have Node 24
+and uv available. `uv sync` creates the worktree's `.venv` using `.python-version`;
+the install target also installs npm dependencies and Chromium.
+
+The copied `.env` stays ignored by Git, with `op://` references unresolved. Start
+Docker Desktop and use `make up` or `make dev` when needed.
+
+Run only one Agora Compose stack at a time across checkouts: the project name,
+ports, and database volumes are shared. Before switching checkouts, stop `make dev`
+and run `make down` in the previous checkout, then start the stack in the new one.
+`make reset` deletes that shared local data. The Codex **Develop** and **Check**
+actions run `make dev` and `make check` respectively.
