@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from logfire.testing import CaptureLogfire
 from pydantic import SecretStr
 from pytest import MonkeyPatch
+from sqlalchemy.exc import OperationalError
 
 from agora_api.api.deps import get_workflow_client
 from agora_api.config import settings
@@ -34,3 +35,21 @@ def test_request_bodies_and_credentials_are_not_recorded(
     assert any(span["name"] == "Request rejected" for span in spans)
     assert secret not in str(spans)
     assert body_marker not in str(spans)
+
+
+def test_storage_error_details_are_not_exported(
+    app: FastAPI, capfire: CaptureLogfire, monkeypatch: MonkeyPatch
+) -> None:
+    secret = "controlled-database-error-detail"
+    client = Mock(spec=DBOSClient)
+    client.enqueue.side_effect = OperationalError("private connection", {}, Exception(secret))
+    monkeypatch.setattr("agora_api.api.deps.DBOSClient", Mock(return_value=client))
+
+    response = TestClient(app).post(
+        "/workflows", json={"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}
+    )
+    assert response.status_code == 503
+    assert secret not in response.text
+    spans = capfire.exporter.exported_spans_as_dict()
+    assert any(span["name"] == "Enqueue workflow" for span in spans)
+    assert secret not in str(spans)
