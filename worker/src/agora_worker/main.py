@@ -37,8 +37,6 @@ def main() -> int:
         "system_database_url": settings.dbos_database_url,
         "run_admin_server": False,
         "enable_otlp": True,
-        "otlp_traces_endpoints": [],
-        "otlp_logs_endpoints": [],
         "serializer": DBOSPortableJSONSerializer(),
     }
     DBOS(config=config)
