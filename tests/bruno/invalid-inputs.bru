@@ -23,7 +23,8 @@ tests {
     ["numeric string", "add_then_scale", { left: "1", right: 2 }],
     ["boolean integer", "add_then_scale", { left: true, right: 2 }],
     ["missing divisor", "divide_sum", { left: 1, right: 2 }],
-    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }]
+    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }],
+    ["unexpected credential field", "add_then_scale", { left: 1, right: 2, credential: "not-a-real-secret" }]
   ]) {
     test("reject " + name, async function () {
       await bru.sendRequest({
