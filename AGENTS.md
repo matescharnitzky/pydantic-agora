@@ -3,11 +3,13 @@
 Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed by Pydantic.
 
 Follow the latest user guidance when it differs from an issue description; ask when the intended behavior is unclear.
+Agree on the smallest user-visible outcome. Confirm scope additions, new infrastructure, or new test frameworks before implementing them.
 
 ## Architecture
 
 - Follow the service responsibilities in [architecture.md](docs/architecture.md). Keep services independently deployable.
 - API and worker must not import each other's internals. Introduce shared packages or infrastructure only when there is a demonstrated need and an agreed design.
+- Check official documentation and installed library capabilities before building custom integrations. Prefer native instrumentation.
 
 ## Coding standards
 
@@ -32,12 +34,14 @@ Follow the latest user guidance when it differs from an issue description; ask w
 ## Development and testing
 
 - Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>`; do not use `codex/`.
+- Wait for explicit final user approval of the current PR before merging or enabling auto-merge.
 - Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
 - Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
 - Keep service tests with their service. Use Bruno for API checks and Playwright for user scenarios in root `tests/`, without application imports.
 - Reuse existing test commands and keep the scenario README index current.
 - Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
 - Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
+- After rebuilding the stack, run `make test-bruno` to verify workflows complete. For observability changes, also verify a fresh API-to-worker trace through Logfire's read API.
 
 ## Configuration and secrets
 
