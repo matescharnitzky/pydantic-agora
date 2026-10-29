@@ -34,10 +34,8 @@ Follow the latest user guidance when it differs from an issue description; ask w
 - Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>`; do not use `codex/`.
 - Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
 - Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
-- Keep service tests with their service. Use Bruno for focused API checks and Playwright for user scenarios through the browser or HTTP in root `tests/`, without importing application internals.
-- Name Playwright scenario files `<subject>.spec.ts` and describe expected behavior in plain-language test names. Use `test.step` for meaningful actions and polling assertions for asynchronous results.
-- Keep reusable setup, service control, and cleanup in Playwright fixtures; keep scenario-specific actions and assertions in the test. Restore services during cleanup even when a test fails. Run scenarios one at a time after browser checks and use existing test commands rather than adding per-feature Make targets.
-- Keep `tests/playwright/scenarios/README.md` as a brief index with one explanation per test case. Keep conventions here in AGENTS.md and treat executable tests as the source of truth.
+- Keep service tests with their service. Use Bruno for API checks and Playwright for user scenarios in root `tests/`, without application imports.
+- Reuse existing test commands and keep the scenario README index current.
 - Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
 - Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
 
