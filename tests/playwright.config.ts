@@ -11,14 +11,14 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
-      testIgnore: "**/scenarios/**",
+      name: "browser",
+      testMatch: "**/browser/**/*.spec.ts",
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "scenarios",
       testMatch: "**/scenarios/**/*.spec.ts",
-      dependencies: ["chromium"],
+      dependencies: ["browser"],
       retries: 0,
       workers: 1,
     },
