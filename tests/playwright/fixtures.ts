@@ -11,6 +11,7 @@ async function docker(...args: string[]): Promise<string> {
 
 type Worker = {
   crash(): Promise<void>;
+  stop(): Promise<void>;
   start(): Promise<void>;
 };
 
@@ -29,6 +30,7 @@ export const test = base.extend<{ worker: Worker }>({
     expect(await docker("inspect", "--format", "{{.State.Running}}", id)).toBe("true");
     const worker: Worker = {
       async crash() { await docker("kill", "--signal", "KILL", id); },
+      async stop() { await docker("stop", "--time", "10", id); },
       async start() { await docker("start", id); },
     };
     try {

@@ -1,6 +1,10 @@
 from uuid import uuid4
 
-from dbos import DBOSClient, WorkflowSerializationFormat, error
+import logfire
+from dbos import DBOSClient, WorkflowSerializationFormat
+from dbos import error as dbos_error
+from opentelemetry.context import get_current
+from sqlalchemy.exc import SQLAlchemyError
 
 from agora_api.models import (
     Workflow,
@@ -27,23 +31,29 @@ STATUS_MAP = {
 
 def submit_workflow(client: DBOSClient, request: WorkflowRequest) -> str:
     workflow_id = str(uuid4())
-    client.enqueue(
-        {
-            "workflow_id": workflow_id,
-            "workflow_name": WORKFLOW_NAME,
-            "queue_name": QUEUE_NAME,
-            "serialization_type": WorkflowSerializationFormat.PORTABLE,
-            "application_name": APPLICATION_NAME,
-        },
-        request.model_dump(mode="json"),
-    )
+    with logfire.span("Enqueue workflow", workflow_id=workflow_id, operation=request.operation):
+        try:
+            client.enqueue(
+                {
+                    "workflow_id": workflow_id,
+                    "workflow_name": WORKFLOW_NAME,
+                    "queue_name": QUEUE_NAME,
+                    "serialization_type": WorkflowSerializationFormat.PORTABLE,
+                    "application_name": APPLICATION_NAME,
+                    "workflow_timeout": request.limits.timeout_seconds,
+                    "otel_context": get_current(),
+                },
+                request.model_dump(mode="json"),
+            )
+        except SQLAlchemyError:
+            raise SQLAlchemyError("Workflow storage unavailable") from None
     return workflow_id
 
 
 def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
     try:
         workflow = client.retrieve_workflow(workflow_id).get_status()
-    except error.DBOSNonExistentWorkflowError:
+    except dbos_error.DBOSNonExistentWorkflowError:
         return None
     if workflow.name != WORKFLOW_NAME or workflow.application_name != APPLICATION_NAME:
         return None
@@ -52,12 +62,28 @@ def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
     request = request_adapter.validate_python(workflow.input["args"][0])
     status = workflow.status
     public_status = STATUS_MAP[status]
+    if status == "CANCELLED":
+        error = "Workflow cancelled or time limit exceeded"
+    elif workflow.error is not None and str(workflow.error) == "Step budget exhausted":
+        error = "Step budget exhausted"
+    else:
+        error = "Workflow failed" if public_status == WorkflowStatus.FAILED else None
+    logfire.info("Workflow status", workflow_id=workflow_id, status=public_status)
     return Workflow(
         id=workflow_id,
         status=public_status,
         request=request,
         result=WorkflowResult.model_validate(workflow.output) if status == "SUCCESS" else None,
-        error="Workflow failed" if public_status == WorkflowStatus.FAILED else None,
+        error=error,
         created_at=workflow.created_at,
         updated_at=workflow.updated_at,
     )
+
+
+def cancel_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
+    workflow = get_workflow(client, workflow_id)
+    if workflow is None:
+        return None
+    if workflow.status in {WorkflowStatus.WAITING, WorkflowStatus.RUNNING}:
+        client.cancel_workflow(workflow_id)
+    return get_workflow(client, workflow_id)

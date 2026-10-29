@@ -4,7 +4,7 @@ test.use({ baseURL: process.env.API_BASE_URL ?? "http://localhost:8000" });
 
 test("a running workflow completes after the worker crashes and restarts", async ({ request, worker }) => {
   test.setTimeout(60_000);
-  const input = { operation: "wait_then_add", inputs: { seconds: 5 } };
+  const input = { operation: "wait_then_add", inputs: { seconds: 5 }, limits: { timeout_seconds: 30 } };
   const submitted = await request.post("/workflows", { data: input });
   expect(submitted.status()).toBe(202);
   const { id } = await submitted.json();
