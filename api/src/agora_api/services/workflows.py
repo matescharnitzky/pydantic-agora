@@ -1,6 +1,9 @@
 from uuid import uuid4
 
+import logfire
 from dbos import DBOSClient, WorkflowSerializationFormat, error
+from opentelemetry.context import get_current
+from sqlalchemy.exc import SQLAlchemyError
 
 from agora_api.models import (
     Workflow,
@@ -27,16 +30,21 @@ STATUS_MAP = {
 
 def submit_workflow(client: DBOSClient, request: WorkflowRequest) -> str:
     workflow_id = str(uuid4())
-    client.enqueue(
-        {
-            "workflow_id": workflow_id,
-            "workflow_name": WORKFLOW_NAME,
-            "queue_name": QUEUE_NAME,
-            "serialization_type": WorkflowSerializationFormat.PORTABLE,
-            "application_name": APPLICATION_NAME,
-        },
-        request.model_dump(mode="json"),
-    )
+    with logfire.span("Enqueue workflow", workflow_id=workflow_id, operation=request.operation):
+        try:
+            client.enqueue(
+                {
+                    "workflow_id": workflow_id,
+                    "workflow_name": WORKFLOW_NAME,
+                    "queue_name": QUEUE_NAME,
+                    "serialization_type": WorkflowSerializationFormat.PORTABLE,
+                    "application_name": APPLICATION_NAME,
+                    "otel_context": get_current(),
+                },
+                request.model_dump(mode="json"),
+            )
+        except SQLAlchemyError:
+            raise SQLAlchemyError("Workflow storage unavailable") from None
     return workflow_id
 
 
@@ -52,6 +60,7 @@ def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
     request = request_adapter.validate_python(workflow.input["args"][0])
     status = workflow.status
     public_status = STATUS_MAP[status]
+    logfire.info("Workflow status", workflow_id=workflow_id, status=public_status)
     return Workflow(
         id=workflow_id,
         status=public_status,
