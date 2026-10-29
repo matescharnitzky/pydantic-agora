@@ -2,14 +2,16 @@
 
 Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed by Pydantic.
 
-Follow the latest user guidance when it differs from an issue description; ask when the intended behavior is unclear.
-Agree on the smallest user-visible outcome. Confirm scope additions, new infrastructure, or new test frameworks before implementing them.
+## General principles
+
+- Follow the latest user guidance when it differs from an issue description. Ask when the intended behavior is unclear.
+- Agree on the smallest user-visible outcome. Confirm any scope additions before implementing them.
+- Check official documentation for the installed libraries. Prefer native implementation before building custom integrations.
 
 ## Architecture
 
 - Follow the service responsibilities in [architecture.md](docs/architecture.md). Keep services independently deployable.
-- API and worker must not import each other's internals. Introduce shared packages or infrastructure only when there is a demonstrated need and an agreed design.
-- Check official documentation and installed library capabilities before building custom integrations. Prefer native instrumentation.
+- API and worker must not import each other's internals.
 
 ## Coding standards
 
@@ -31,22 +33,30 @@ Agree on the smallest user-visible outcome. Confirm scope additions, new infrast
 - Document implemented behavior. Remove repetition and historical discussion that merely narrates the code.
 - Keep setup and development instructions in [README.md](README.md) and architecture in [architecture.md](docs/architecture.md). Reference these instead of duplicating them.
 
-## Development and testing
+## Git and GitHub
 
-- Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>`; do not use `codex/`.
+- Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>` or similar, do not use `codex/`.
 - Wait for explicit final user approval of the current PR before merging or enabling auto-merge.
-- Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
-- Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
-- Keep service tests with their service. Use Bruno for API checks and Playwright for user scenarios in root `tests/`, without application imports.
-- Reuse existing test commands and keep the scenario README index current.
+
+## Development
+
+- Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. 
+- Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
+- Follow [compose.yaml](compose.yaml) for the running stack and [compose.dev.yaml](compose.dev.yaml) for development overrides.
+
+## Testing
+
+- Keep service tests with their service.
+- Use Bruno for API checks and Playwright for browser and user scenario tests in root `tests/`, without application imports.
 - Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
+- Reuse existing test commands and keep the scenario README index current.
+- Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
 - Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
-- After rebuilding the stack, run `make test-bruno` to verify workflows complete. For observability changes, also verify a fresh API-to-worker trace through Logfire's read API.
+- After rebuilding the stack, run `make test-bruno` to verify workflows complete. 
+- For observability changes, also verify a fresh API-to-worker trace through Logfire's read API.
 
 ## Configuration and secrets
 
-- Follow the README and [.env.example](.env.example) for local `.env` setup. Keep local configuration ignored and examples free of real credentials.
-- Follow [compose.yaml](compose.yaml) for the running stack and [compose.dev.yaml](compose.dev.yaml) for development overrides.
 - For our development work, keep only `op://` secret references in `.env`; do not write resolved secrets to it. This does not restrict the user configuration options documented in the README.
 - For remote work, start `make dev` while the user is available to approve 1Password and keep the watcher running. Do not add a secrets cache or a credential-recovery wrapper.
 - Never print resolved secrets or resolved Compose configuration. Keep credentials out of images, logs, tests, and browser bundles.
