@@ -1,5 +1,7 @@
 from unittest.mock import Mock
+from uuid import uuid4
 
+import pytest
 from dbos import DBOSClient
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -32,24 +34,32 @@ def test_request_bodies_and_credentials_are_not_recorded(
     client.enqueue.assert_not_called()
     assert secret not in response.text
     spans = capfire.exporter.exported_spans_as_dict()
-    assert any(span["name"] == "Request rejected" for span in spans)
+    assert any(span["attributes"].get("http.status_code") == 422 for span in spans)
     assert secret not in str(spans)
     assert body_marker not in str(spans)
 
 
+@pytest.mark.parametrize("method", ["POST", "GET"])
 def test_storage_error_details_are_not_exported(
-    app: FastAPI, capfire: CaptureLogfire, monkeypatch: MonkeyPatch
+    method: str, app: FastAPI, capfire: CaptureLogfire, monkeypatch: MonkeyPatch
 ) -> None:
     secret = "controlled-database-error-detail"
     client = Mock(spec=DBOSClient)
-    client.enqueue.side_effect = OperationalError("private connection", {}, Exception(secret))
+    storage_error = OperationalError("private connection", {}, Exception(secret))
+    client.enqueue.side_effect = storage_error
+    client.retrieve_workflow.return_value.get_status.side_effect = storage_error
     monkeypatch.setattr("agora_api.api.deps.DBOSClient", Mock(return_value=client))
 
-    response = TestClient(app).post(
-        "/workflows", json={"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}
+    http = TestClient(app)
+    response = (
+        http.post(
+            "/workflows", json={"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}
+        )
+        if method == "POST"
+        else http.get(f"/workflows/{uuid4()}")
     )
     assert response.status_code == 503
     assert secret not in response.text
     spans = capfire.exporter.exported_spans_as_dict()
-    assert any(span["name"] == "Enqueue workflow" for span in spans)
+    assert any(span["attributes"].get("http.status_code") == 503 for span in spans)
     assert secret not in str(spans)

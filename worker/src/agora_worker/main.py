@@ -3,11 +3,11 @@ import signal
 from threading import Event
 from types import FrameType
 
+import logfire
 from dbos import DBOS, DBOSConfig, DBOSPortableJSONSerializer
 
 from agora_worker import workflows
 from agora_worker.config import Settings
-from agora_worker.observability import configure_observability
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,14 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    configure_observability(settings)
+    logfire.configure(
+        service_name="agora-worker",
+        token=settings.logfire_token.get_secret_value() or None,
+        send_to_logfire=bool(settings.logfire_token.get_secret_value()),
+        console=False,
+        inspect_arguments=False,
+        data_dir="/tmp/agora-logfire-worker",
+    )
     config: DBOSConfig = {
         "name": "agora-worker",
         "system_database_url": settings.dbos_database_url,

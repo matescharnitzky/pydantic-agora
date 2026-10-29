@@ -1,24 +1,17 @@
 import logfire
-from fastapi import FastAPI, Request
-from starlette.middleware.base import RequestResponseEndpoint
-from starlette.responses import Response
+from fastapi import FastAPI
 
 from agora_api.api.main import api_router
 from agora_api.config import settings
-from agora_api.observability import configure_observability
 
-configure_observability(settings)
+logfire.configure(
+    service_name="agora-api",
+    token=settings.logfire_token.get_secret_value() or None,
+    send_to_logfire=bool(settings.logfire_token.get_secret_value()),
+    console=False,
+    inspect_arguments=False,
+    data_dir="/tmp/agora-logfire-api",
+)
 app = FastAPI(title="Agora API", version="0.1.0")
-
-
-@app.middleware("http")
-async def trace_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
-    with logfire.span("HTTP request", http_method=request.method) as span:
-        response = await call_next(request)
-        span.set_attribute("http.status_code", response.status_code)
-        if response.status_code >= 400:
-            logfire.warn("Request rejected", status_code=response.status_code)
-        return response
-
-
+logfire.instrument_fastapi(app, request_attributes_mapper=lambda _request, _attributes: None)
 app.include_router(api_router)
