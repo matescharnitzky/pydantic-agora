@@ -27,7 +27,4 @@ extraPaths = ["api/src", "worker/src"]
 
 [tool.pytest.ini_options]
 testpaths = ["api/tests", "worker/tests"]
-markers = [
-  "integration: requires a running PostgreSQL database",
-  "recovery: crash/restart suite using isolated PostgreSQL schemas and child processes",
-]
+markers = ["integration: requires a running PostgreSQL database"]

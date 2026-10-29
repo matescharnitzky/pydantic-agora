@@ -1,7 +1,9 @@
+from time import sleep
+
 from dbos import DBOS, WorkflowSerializationFormat
 from pydantic import JsonValue
 
-from agora_worker.models import ScaleRequest, WorkflowResult, request_adapter
+from agora_worker.models import ScaleRequest, WaitRequest, WorkflowResult, request_adapter
 
 QUEUE_NAME = "agora-workflows-v1"
 WORKFLOW_NAME = "agora.execute.v1"
@@ -22,9 +24,18 @@ def divide(value: int, divisor: int) -> float:
     return value / divisor
 
 
+@DBOS.step()
+def wait(seconds: float) -> None:
+    sleep(seconds)
+
+
 @DBOS.workflow(name=WORKFLOW_NAME, serialization_type=WorkflowSerializationFormat.PORTABLE)
 def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     request = request_adapter.validate_python(payload)
+    if isinstance(request, WaitRequest):
+        wait(request.inputs.seconds)
+        value = add(2, 3)
+        return WorkflowResult(value=float(value), branch="unchanged").model_dump(mode="json")
     total = add(request.inputs.left, request.inputs.right)
     if isinstance(request, ScaleRequest):
         if request.inputs.double_positive and total > 0:

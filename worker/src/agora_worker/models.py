@@ -30,7 +30,18 @@ class DivideRequest(ContractModel):
     inputs: DivideInputs
 
 
-WorkflowRequest = Annotated[ScaleRequest | DivideRequest, Field(discriminator="operation")]
+class WaitInputs(ContractModel):
+    seconds: float = Field(ge=0.0, le=5.0)
+
+
+class WaitRequest(ContractModel):
+    operation: Literal["wait_then_add"]
+    inputs: WaitInputs
+
+
+WorkflowRequest = Annotated[
+    ScaleRequest | DivideRequest | WaitRequest, Field(discriminator="operation")
+]
 request_adapter = TypeAdapter(WorkflowRequest)
 
 

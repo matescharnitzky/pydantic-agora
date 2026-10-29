@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    - cron: "0 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -102,9 +100,6 @@ jobs:
         run: |
           make test-db
           docker compose exec -T worker python -m agora_worker.health
-      - name: Crash recovery suite
-        if: github.event_name != 'pull_request'
-        run: make test-recovery
       - run: npm run --workspace tests test:bruno
       - run: npm run --workspace tests test:playwright
       - name: Service diagnostics

@@ -2,7 +2,6 @@
   "pages": [
     "index",
     "architecture",
-    "dbos-recovery",
     "development-tooling"
   ]
 }

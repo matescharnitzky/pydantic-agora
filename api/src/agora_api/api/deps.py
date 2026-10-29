@@ -13,7 +13,6 @@ def get_workflow_client() -> Iterator[DBOSClient]:
     client = DBOSClient(
         system_database_url=settings.dbos_database_url,
         application_name=APPLICATION_NAME,
-        dbos_system_schema=settings.dbos_system_schema,
         serializer=DBOSPortableJSONSerializer(),
         lazy=True,
         retry_connection_errors=False,

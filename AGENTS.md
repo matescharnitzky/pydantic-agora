@@ -2,6 +2,8 @@
 
 Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed by Pydantic.
 
+Follow the latest user guidance when it differs from an issue description; ask when the intended behavior is unclear.
+
 ## Architecture
 
 - Follow the service responsibilities in [architecture.md](docs/architecture.md). Keep services independently deployable.
@@ -32,7 +34,7 @@ Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed b
 - Give each feature issue its own branch and pull request. Use conventional branch prefixes such as `feat/<name>`, `fix/<name>`, or `docs/<name>`; do not use `codex/`.
 - Use [.python-version](.python-version) and [.nvmrc](.nvmrc) for runtime versions. Keep dependency declarations consistent with [uv.lock](uv.lock) and [package-lock.json](package-lock.json).
 - Use [Makefile](Makefile) targets for setup, development, and verification; see the README for usage.
-- Keep service tests with their service. Use Bruno for HTTP/API integration tests and Playwright for browser journeys in root `tests/`, without importing application internals.
+- Keep service tests with their service. Use Bruno for focused API checks and Playwright for user scenarios through the browser or HTTP in root `tests/`, without importing application internals. Share service lifecycle control through Playwright fixtures, run disruptive scenarios after browser tests, and use existing test commands rather than adding per-feature Make targets.
 - Database integration tests must use real PostgreSQL and fail when credentials are missing. Do not report skipped tests or mocked checks as successful database integration.
 - Run checks appropriate to the change and report commands, results, and anything unverified in the PR.
 

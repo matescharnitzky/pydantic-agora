@@ -24,7 +24,6 @@ def main() -> int:
     signal.signal(signal.SIGINT, stop)
     config: DBOSConfig = {
         "name": "agora-worker",
-        "dbos_system_schema": settings.dbos_system_schema,
         "system_database_url": settings.dbos_database_url,
         "run_admin_server": False,
         "enable_otlp": False,
