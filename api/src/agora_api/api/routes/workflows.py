@@ -24,11 +24,3 @@ def get_workflow(workflow_id: UUID, client: WorkflowClient) -> Workflow:
     if workflow is None:
         raise HTTPException(status_code=404, detail="Workflow not found")
     return workflow
-
-
-@router.post("/{workflow_id}/cancel", response_model=Workflow)
-def cancel_workflow(workflow_id: UUID, client: WorkflowClient) -> Workflow:
-    workflow = workflows.cancel_workflow(client, str(workflow_id))
-    if workflow is None:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return workflow
