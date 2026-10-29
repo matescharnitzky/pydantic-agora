@@ -1,0 +1,35 @@
+meta {
+  name: Enforce workflow time limit
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/workflows
+  body: json
+  auth: none
+}
+
+body:json {
+  {"operation":"wait_then_add","inputs":{"seconds":0.5},"limits":{"timeout_seconds":0.1}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  test("time-limited workflow remains retrievable", async function () {
+    const url = bru.getEnvVar("baseUrl") + "/workflows/" + res.getBody().id;
+    let workflow;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const response = await bru.sendRequest({ method: "GET", url });
+      expect(response.status).to.equal(200);
+      workflow = response.data;
+      if (["successful", "failed"].includes(workflow.status)) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    expect(workflow.status).to.equal("failed");
+    expect(workflow.error).to.equal("Workflow cancelled or time limit exceeded");
+  });
+}

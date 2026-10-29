@@ -1,6 +1,7 @@
 from uuid import uuid4
 
-from dbos import DBOSClient, WorkflowSerializationFormat, error
+from dbos import DBOSClient, WorkflowSerializationFormat
+from dbos import error as dbos_error
 
 from agora_api.models import (
     Workflow,
@@ -34,6 +35,7 @@ def submit_workflow(client: DBOSClient, request: WorkflowRequest) -> str:
             "queue_name": QUEUE_NAME,
             "serialization_type": WorkflowSerializationFormat.PORTABLE,
             "application_name": APPLICATION_NAME,
+            "workflow_timeout": request.limits.timeout_seconds,
         },
         request.model_dump(mode="json"),
     )
@@ -43,7 +45,7 @@ def submit_workflow(client: DBOSClient, request: WorkflowRequest) -> str:
 def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
     try:
         workflow = client.retrieve_workflow(workflow_id).get_status()
-    except error.DBOSNonExistentWorkflowError:
+    except dbos_error.DBOSNonExistentWorkflowError:
         return None
     if workflow.name != WORKFLOW_NAME or workflow.application_name != APPLICATION_NAME:
         return None
@@ -52,12 +54,27 @@ def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
     request = request_adapter.validate_python(workflow.input["args"][0])
     status = workflow.status
     public_status = STATUS_MAP[status]
+    if status == "CANCELLED":
+        error = "Workflow cancelled or time limit exceeded"
+    elif workflow.error is not None and str(workflow.error) == "Step budget exhausted":
+        error = "Step budget exhausted"
+    else:
+        error = "Workflow failed" if public_status == WorkflowStatus.FAILED else None
     return Workflow(
         id=workflow_id,
         status=public_status,
         request=request,
         result=WorkflowResult.model_validate(workflow.output) if status == "SUCCESS" else None,
-        error="Workflow failed" if public_status == WorkflowStatus.FAILED else None,
+        error=error,
         created_at=workflow.created_at,
         updated_at=workflow.updated_at,
     )
+
+
+def cancel_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
+    workflow = get_workflow(client, workflow_id)
+    if workflow is None:
+        return None
+    if workflow.status in {WorkflowStatus.WAITING, WorkflowStatus.RUNNING}:
+        client.cancel_workflow(workflow_id)
+    return get_workflow(client, workflow_id)

@@ -39,7 +39,13 @@ def test_status_translation(status: str, expected: str) -> None:
     assert workflow.status == expected
     assert workflow.model_dump(mode="json")["status"] == expected
     assert (workflow.result is not None) == (status == "SUCCESS")
-    assert workflow.error == ("Workflow failed" if expected == "failed" else None)
+    assert workflow.error == (
+        "Workflow cancelled or time limit exceeded"
+        if status == "CANCELLED"
+        else "Workflow failed"
+        if expected == "failed"
+        else None
+    )
 
 
 def test_submission_only_enqueues_and_returns_location(app: FastAPI) -> None:

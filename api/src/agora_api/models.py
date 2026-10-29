@@ -5,7 +5,16 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 
 class ContractModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+
+
+class WorkflowLimits(ContractModel):
+    timeout_seconds: float = Field(default=10.0, ge=0.1, le=30.0)
+    max_calls: int = Field(default=4, ge=1, le=4)
+
+
+class OperationRequest(ContractModel):
+    limits: WorkflowLimits = Field(default_factory=WorkflowLimits)
 
 
 class Numbers(ContractModel):
@@ -21,21 +30,22 @@ class DivideInputs(Numbers):
     divisor: int = Field(ge=-1_000_000, le=1_000_000)
 
 
-class ScaleRequest(ContractModel):
+class ScaleRequest(OperationRequest):
     operation: Literal["add_then_scale"]
     inputs: ScaleInputs
 
 
-class DivideRequest(ContractModel):
+class DivideRequest(OperationRequest):
     operation: Literal["divide_sum"]
     inputs: DivideInputs
 
 
 class WaitInputs(ContractModel):
     seconds: float = Field(ge=0.0, le=5.0)
+    retry_once: bool = False
 
 
-class WaitRequest(ContractModel):
+class WaitRequest(OperationRequest):
     operation: Literal["wait_then_add"]
     inputs: WaitInputs
 
