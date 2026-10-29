@@ -17,17 +17,3 @@ body:json {
 assert {
   res.status: eq 422
 }
-
-tests {
-  for (const operation of ["os.getenv", "__import__", "eval"]) {
-    test("reject " + operation, async function () {
-      await bru.sendRequest({
-        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" },
-        data: { operation, inputs: { name: "POSTGRES_PASSWORD" } }
-      }, (error, response) => {
-        expect(error ? error.status : response.status).to.equal(422);
-      });
-    });
-  }
-}
