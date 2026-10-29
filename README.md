@@ -20,7 +20,7 @@ The application works with the following environment variables.
 | Variable | Value |
 |---|---|
 | `OPENAI_API_KEY` | Optional; not used yet |
-| `LOGFIRE_TOKEN` | Optional; not used yet |
+| `LOGFIRE_TOKEN` | Optional; sends API and worker traces to Logfire |
 | `POSTGRES_USER` | Required: database role |
 | `POSTGRES_PASSWORD` | Required: database password |
 | `PGADMIN_EMAIL` | Required: pgAdmin login |
