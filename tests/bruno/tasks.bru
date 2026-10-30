@@ -16,7 +16,7 @@ assert {
 
 tests {
   test("discovery exposes Pydantic input and output schemas", function () {
-    expect(res.getBody().map(item => item.id)).to.deep.equal(["generate", "dummy", "parse", "decide", "workspace"]);
+    expect(res.getBody().map(item => item.id)).to.deep.equal(["generate", "dummy", "parse", "decide", "workspace", "web"]);
     const task = res.getBody().find(item => item.id === "generate");
     expect(task.input_schema.properties).to.have.property("prompt");
     expect(task.input_schema.properties).not.to.have.property("output_schema");
