@@ -20,17 +20,11 @@ assert {
 }
 
 tests {
+  const { waitForRun } = require("./helpers/runs.js");
+
   async function checkRun(id, task, inputs, result) {
     const url = bru.getEnvVar("baseUrl") + "/runs/" + id;
-    let run;
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const response = await bru.sendRequest({ method: "GET", url });
-      expect(response.status).to.equal(200);
-      run = response.data;
-      if (["successful", "failed"].includes(run.status)) break;
-      expect(["waiting", "running"]).to.include(run.status);
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    const run = await waitForRun(bru, id);
     expect(run.status).to.equal("successful");
     expect(run.result).to.deep.equal(result);
     expect(run.request.task).to.equal(task);

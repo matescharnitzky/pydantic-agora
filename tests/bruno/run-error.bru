@@ -19,16 +19,11 @@ assert {
 }
 
 tests {
+  const { waitForRun } = require("./helpers/runs.js");
+
   test("failed run remains retrievable", async function () {
     const url = bru.getEnvVar("baseUrl") + "/runs/" + res.getBody().id;
-    let run;
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const response = await bru.sendRequest({ method: "GET", url });
-      expect(response.status).to.equal(200);
-      run = response.data;
-      if (["successful", "failed"].includes(run.status)) break;
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    const run = await waitForRun(bru, res.getBody().id);
     expect(run.status).to.equal("failed");
     expect(run.result).to.equal(null);
     expect(run.error).to.equal("Run failed");

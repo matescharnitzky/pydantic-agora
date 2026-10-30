@@ -22,19 +22,10 @@ assert {
 }
 
 tests {
-  async function finished(id) {
-    const url = bru.getEnvVar("baseUrl") + "/runs/" + id;
-    for (let attempt = 0; attempt < 900; attempt++) {
-      const response = await bru.sendRequest({ method: "GET", url });
-      expect(response.status).to.equal(200);
-      if (["successful", "failed"].includes(response.data.status)) return response.data;
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error("Generation did not complete within 90 seconds");
-  }
+  const { waitForRun } = require("./helpers/runs.js");
 
   test("real model text is persisted and retrievable", async function () {
-    const run = await finished(res.getBody().id);
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
     expect(run.status).to.equal("successful");
     expect(run.result.output.trim()).to.equal("hello");
     const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });

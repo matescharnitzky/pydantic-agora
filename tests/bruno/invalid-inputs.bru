@@ -19,21 +19,13 @@ assert {
 }
 
 tests {
+  const { waitForRun } = require("./helpers/runs.js");
+
   async function checkFailed(id) {
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const response = await bru.sendRequest({
-        method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + id
-      });
-      expect(response.status).to.equal(200);
-      if (["successful", "failed"].includes(response.data.status)) {
-        expect(response.data.status).to.equal("failed");
-        expect(response.data.result).to.equal(null);
-        expect(response.data.error).to.equal("Run failed");
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error("Worker did not reject invalid inputs within 20 seconds");
+    const run = await waitForRun(bru, id);
+    expect(run.status).to.equal("failed");
+    expect(run.result).to.equal(null);
+    expect(run.error).to.equal("Run failed");
   }
 
   test("invalid inputs are reported as a failed run", async function () {

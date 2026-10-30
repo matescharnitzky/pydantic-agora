@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import psycopg
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from agora_worker import workflows
 from agora_worker.config import Settings
@@ -36,7 +36,7 @@ def test_workflow_validates_inputs_before_running_typed_task(
     monkeypatch.setattr(workflows, "TASK_REGISTRY", [LengthTask])
     execute = unwrap(workflows.execute)
     assert execute({"task": "length", "inputs": {"text": "abc"}}) == {"length": 3}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValueError, match="Invalid task data"):
         execute({"task": "length", "inputs": {"text": 1}})
 
 
