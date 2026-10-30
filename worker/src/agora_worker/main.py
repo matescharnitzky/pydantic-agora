@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> int:
+    """Start DBOS, publish the task catalog, and consume queued workflows until signalled.
+
+    Shut down DBOS on exit, including when startup registration fails.
+    """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     settings = Settings()
 

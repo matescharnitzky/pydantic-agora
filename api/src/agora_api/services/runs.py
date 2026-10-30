@@ -27,6 +27,10 @@ STATUS_MAP = {
 
 
 def submit_run(client: DBOSClient, task_id: str, request: RunInput) -> str:
+    """Enqueue a portable task request with the current trace context and a new run ID.
+
+    Task inputs are validated later by the worker. Storage errors omit connection details.
+    """
     run_id = str(uuid4())
     try:
         client.enqueue(
@@ -46,6 +50,11 @@ def submit_run(client: DBOSClient, task_id: str, request: RunInput) -> str:
 
 
 def get_run(client: DBOSClient, run_id: str) -> Run | None:
+    """Read an Agora task workflow, returning None for missing or unrelated workflows.
+
+    Expose only successful output and a generic failure message; storage errors omit
+    connection details.
+    """
     try:
         workflow = client.retrieve_workflow(run_id).get_status()
     except error.DBOSNonExistentWorkflowError:

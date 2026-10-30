@@ -12,23 +12,23 @@ from pydantic_ai.native_tools import WebSearchTool
 from agora_worker.tasks.base import Task
 
 
-class WebInput(BaseModel):  # noqa: D101 - Simple data model.
+class WebInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     prompt: str = Field(min_length=1)
 
 
-class CitedText(BaseModel):  # noqa: D101 - Simple data model.
+class CitedText(BaseModel):
     text: str
     citations: list[Citation]
 
 
-class FetchedPage(BaseModel):  # noqa: D101 - Simple data model.
+class FetchedPage(BaseModel):
     url: str
     title: str
 
 
-class WebOutput(BaseModel):  # noqa: D101 - Simple data model.
+class WebOutput(BaseModel):
     output: str
     text_parts: list[CitedText]
     fetched_pages: list[FetchedPage]

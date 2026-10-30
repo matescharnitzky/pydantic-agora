@@ -7,14 +7,14 @@ from pydantic_ai.durable_exec.dbos import DBOSDurability
 from agora_worker.tasks.base import Task
 
 
-class GenerationInput(BaseModel):  # noqa: D101 - Simple data model.
+class GenerationInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     prompt: str = Field(min_length=1)
     instructions: str = ""
 
 
-class GenerationOutput(BaseModel):  # noqa: D101 - Simple data model.
+class GenerationOutput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     output: str

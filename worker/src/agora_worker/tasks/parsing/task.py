@@ -11,7 +11,7 @@ from agora_worker.tasks.base import Task
 MediaType = Literal["application/pdf", "image/png", "image/jpeg", "image/webp"]
 
 
-class InlineFile(BaseModel):  # noqa: D101 - Simple data model.
+class InlineFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["inline"] = "inline"
@@ -33,7 +33,7 @@ class InlineFile(BaseModel):  # noqa: D101 - Simple data model.
         return value
 
 
-class RemoteFile(BaseModel):  # noqa: D101 - Simple data model.
+class RemoteFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["url"] = "url"
@@ -41,7 +41,7 @@ class RemoteFile(BaseModel):  # noqa: D101 - Simple data model.
     url: HttpUrl
 
 
-class ParsingInput(BaseModel):  # noqa: D101 - Simple data model.
+class ParsingInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     files: list[Annotated[InlineFile | RemoteFile, Field(discriminator="kind")]] = Field(
@@ -50,7 +50,7 @@ class ParsingInput(BaseModel):  # noqa: D101 - Simple data model.
     )
 
 
-class ParsingOutput(BaseModel):  # noqa: D101 - Simple data model.
+class ParsingOutput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     text: str

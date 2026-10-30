@@ -10,6 +10,11 @@ WORKFLOW_NAME = "agora.execute.v1"
 
 @DBOS.workflow(name=WORKFLOW_NAME, serialization_type=WorkflowSerializationFormat.PORTABLE)
 def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    """Validate a queued request, run its registered task, and serialize the output.
+
+    Replace Pydantic error details to keep input values out of recorded exceptions;
+    other task failures propagate to DBOS.
+    """
     try:
         request = TaskRequest.model_validate(payload)
         task_type = next((item for item in TASK_REGISTRY if item.id == request.task), None)

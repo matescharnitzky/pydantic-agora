@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from agora_worker.tasks.base import Task
 
 
-class DummyInput(BaseModel):  # noqa: D101 - Simple data model.
+class DummyInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     left: int = Field(default=2, ge=-1_000_000, le=1_000_000)
@@ -15,7 +15,7 @@ class DummyInput(BaseModel):  # noqa: D101 - Simple data model.
     fail: bool = False
 
 
-class DummyOutput(BaseModel):  # noqa: D101 - Simple data model.
+class DummyOutput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     value: int

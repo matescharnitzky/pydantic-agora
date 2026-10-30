@@ -10,13 +10,13 @@ from pydantic_ai_harness.filesystem import ReadFileCallPart
 from agora_worker.tasks.base import Task
 
 
-class WorkspaceInput(BaseModel):  # noqa: D101 - Simple data model.
+class WorkspaceInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     prompt: str = Field(min_length=1)
 
 
-class WorkspaceOutput(BaseModel):  # noqa: D101 - Simple data model.
+class WorkspaceOutput(BaseModel):
     output: str
     files_requested: list[str]
 

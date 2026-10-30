@@ -7,6 +7,7 @@ task_adapter = TypeAdapter(list[Task])
 
 
 def list_tasks(connection: psycopg.Connection[tuple[object, ...]]) -> list[Task]:
+    """Validate the worker catalog stored in PostgreSQL; fail if it has not been registered."""
     row = connection.execute(
         "SELECT tasks FROM agora.task_registry WHERE application = %s",
         ("agora-worker",),
@@ -17,5 +18,6 @@ def list_tasks(connection: psycopg.Connection[tuple[object, ...]]) -> list[Task]
 
 
 def validate_task(task_id: str, tasks: list[Task]) -> None:
+    """Reject task IDs absent from the worker catalog before enqueueing a run."""
     if not any(task.id == task_id for task in tasks):
         raise ValueError("Unknown task")

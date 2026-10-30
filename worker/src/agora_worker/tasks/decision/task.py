@@ -14,20 +14,20 @@ type AnswerField = tuple[type[object], FieldInfo]
 type Probability = Annotated[float, Field(ge=0, le=1)]
 
 
-class BooleanAnswer(BaseModel):  # noqa: D101 - Simple data model.
+class BooleanAnswer(BaseModel):
     type: Literal["boolean"] = "boolean"
     value: bool
     probability_yes: Probability
 
 
-class ChoiceAnswer(BaseModel):  # noqa: D101 - Simple data model.
+class ChoiceAnswer(BaseModel):
     type: Literal["choice"] = "choice"
     value: str
     confidence: Probability
     probabilities: dict[str, Probability]
 
 
-class RubricAnswer(BaseModel):  # noqa: D101 - Simple data model.
+class RubricAnswer(BaseModel):
     type: Literal["rubric"] = "rubric"
     value: int
     expected_score: float
@@ -35,7 +35,7 @@ class RubricAnswer(BaseModel):  # noqa: D101 - Simple data model.
     probabilities: dict[str, Probability]
 
 
-class BooleanQuestion(BaseModel):  # noqa: D101 - Simple data model.
+class BooleanQuestion(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["boolean"]
@@ -53,7 +53,7 @@ class BooleanQuestion(BaseModel):  # noqa: D101 - Simple data model.
         return BooleanAnswer(value=probability >= 0.5, probability_yes=probability)
 
 
-class ChoiceQuestion(BaseModel):  # noqa: D101 - Simple data model.
+class ChoiceQuestion(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["choice"]
@@ -84,7 +84,7 @@ class ChoiceQuestion(BaseModel):  # noqa: D101 - Simple data model.
         )
 
 
-class RubricQuestion(BaseModel):  # noqa: D101 - Simple data model.
+class RubricQuestion(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["rubric"]
@@ -127,7 +127,7 @@ type Question = Annotated[
 ]
 
 
-class DecisionInput(BaseModel):  # noqa: D101 - Simple data model.
+class DecisionInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     text: str = Field(min_length=1)
@@ -137,7 +137,7 @@ class DecisionInput(BaseModel):  # noqa: D101 - Simple data model.
 type Answer = Annotated[BooleanAnswer | ChoiceAnswer | RubricAnswer, Field(discriminator="type")]
 
 
-class DecisionOutput(BaseModel):  # noqa: D101 - Simple data model.
+class DecisionOutput(BaseModel):
     answers: dict[str, Answer]
 
 

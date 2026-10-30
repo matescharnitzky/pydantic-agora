@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> PostgresDsn:
+        """Build a PostgreSQL URL with escaped credentials; the result contains the password."""
         return PostgresDsn.build(
             scheme="postgresql",
             host=self.postgres_host,
@@ -28,4 +29,5 @@ class Settings(BaseSettings):
 
     @property
     def dbos_database_url(self) -> str:
+        """Select the psycopg SQLAlchemy driver for DBOS; the URL contains the password."""
         return str(self.database_url).replace("postgresql://", "postgresql+psycopg://", 1)

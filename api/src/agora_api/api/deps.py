@@ -11,6 +11,7 @@ from agora_api.services.runs import APPLICATION_NAME
 
 
 def get_worker_client() -> Iterator[DBOSClient]:
+    """Yield a request-scoped DBOS client, close it afterward, and map storage errors to 503."""
     client = DBOSClient(
         system_database_url=settings.dbos_database_url,
         application_name=APPLICATION_NAME,
@@ -30,6 +31,7 @@ WorkerClient = Annotated[DBOSClient, Depends(get_worker_client)]
 
 
 def get_database_connection() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
+    """Yield a connection with bounded queries and map database errors to HTTP 503."""
     try:
         with psycopg.connect(
             str(settings.database_url), connect_timeout=2, options="-c statement_timeout=2000"
