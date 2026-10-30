@@ -23,20 +23,20 @@ class DummyOutput(BaseModel):
 
 @DBOS.step()
 def wait(seconds: float) -> None:
-    """Block the worker for the requested delay as a durable DBOS step."""
+    """Block the worker thread for the requested delay."""
     sleep(seconds)
 
 
 @DBOS.step()
 def add(left: int, right: int, fail: bool) -> int:
-    """Raise an intentional failure when requested, otherwise persist the sum as a DBOS step."""
+    """Raise an intentional failure before adding when requested."""
     if fail:
         raise ValueError("Dummy task failed")
     return left + right
 
 
 class DummyTask(Task[DummyInput, DummyOutput]):
-    """Exercise durable steps and workflow failure handling without external providers."""
+    """Exercise workflow success and failure paths without external services."""
 
     id = "dummy"
     description = "Wait and add numbers, with an optional failure for runtime checks."

@@ -35,7 +35,7 @@ class WebOutput(BaseModel):
 
 
 class WebTask(Task[WebInput, WebOutput]):
-    """Combine provider-side web search with worker-side page fetching in a durable agent."""
+    """Search at the provider and fetch page contents in the worker."""
 
     id = "web"
     description = "Answer using OpenAI-native web search and a worker-executed page-fetch tool."

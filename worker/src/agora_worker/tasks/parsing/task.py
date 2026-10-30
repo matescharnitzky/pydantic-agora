@@ -57,8 +57,6 @@ class ParsingOutput(BaseModel):
 
 
 class ParsingTask(Task[ParsingInput, ParsingOutput]):
-    """Extract text from PDFs and images through OpenAI with durable agent execution."""
-
     id = "parse"
     description = "Extract text from PDFs and images with an OpenAI model."
     input_model = ParsingInput

@@ -153,8 +153,6 @@ def create_answer_model(questions: dict[str, Question]) -> type[BaseModel]:
 
 
 class DecisionTask(Task[DecisionInput, DecisionOutput]):
-    """Answer typed questions through Jev with durable agent execution."""
-
     id = "decide"
     description = "Answer named boolean, choice, and rubric questions with Jev."
     input_model = DecisionInput
