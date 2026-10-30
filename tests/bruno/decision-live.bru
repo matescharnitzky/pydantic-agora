@@ -1,0 +1,32 @@
+meta {
+  name: Answer a question with Jev
+  type: http
+  seq: 10
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/tasks/decide/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"text":"Please refund my order. I want my money back.","question":"Is the customer asking for a refund?"}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("Jev returns a decision and probability", async function () {
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result.answer).to.equal(true);
+    expect(run.result.probability_yes).to.be.within(0, 1);
+  });
+}
