@@ -1,4 +1,4 @@
-.PHONY: install up down reset check test-db test-bruno test-playwright smoke dev
+.PHONY: install up down reset check test-db test-bruno test-playwright test-models smoke dev
 
 UV_ENV_FILE := $(if $(wildcard .env),--env-file .env)
 
@@ -37,5 +37,9 @@ test-bruno:
 
 test-playwright:
 	npm run --workspace tests test:playwright
+
+test-models:
+	npm run --workspace tests test:bruno:live
+	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked python worker/evals/generation.py
 
 smoke: test-bruno test-playwright

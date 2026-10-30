@@ -19,7 +19,7 @@ The application works with the following environment variables.
 
 | Variable | Value |
 |---|---|
-| `OPENAI_API_KEY` | Optional; not used yet |
+| `OPENAI_API_KEY` | Required in the worker for model generation; optional for dummy workflows |
 | `LOGFIRE_TOKEN` | Optional; sends API and worker traces to Logfire |
 | `POSTGRES_USER` | Required: database role |
 | `POSTGRES_PASSWORD` | Required: database password |
@@ -84,6 +84,7 @@ make install  # Dependencies and Chromium for browser tests
 make check    # Lint, type checks, and unit tests
 make test-db  # Database/worker integration tests; requires the running stack
 make smoke    # Bruno API checks and Playwright user scenarios; requires the running stack
+make test-models  # Explicit live OpenAI checks and Pydantic Evals; incurs model usage
 ```
 
 Run development mode in Docker:
@@ -91,6 +92,39 @@ Run development mode in Docker:
 ```sh
 make dev  # Start the stack and watch for changes; keep this terminal open
 ```
+
+### Model generation
+
+`GET /capabilities` lists the available capability and its schemas. Submit generation through
+`POST /workflows`, then retrieve its status/result from `GET /workflows/{id}`:
+
+```json
+{
+  "operation": "generate",
+  "inputs": {
+    "prompt": "Extract the name from: Ada Lovelace.",
+    "instructions": "Extract only the requested information.",
+    "model": "gpt-5-mini",
+    "output_schema": {
+      "type": "object",
+      "properties": {"name": {"type": "string"}},
+      "required": ["name"],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+Omit `output_schema` for plain text. Schemas use JSON Schema draft 2020-12 without references;
+object, array, and scalar results are validated in the worker. Provider-specific model/schema
+restrictions can still fail execution. Results contain `output` and the responding `model`.
+The API never receives the provider key. Model requests use OpenAI Responses and default to
+`gpt-5-mini`; set `inputs.model` to choose another compatible model.
+
+`make check` and `make smoke` do not call a live model. `make test-models` runs the live Bruno
+workflow checks and three Pydantic Evals cases (text, extraction, classification). Keep generated
+evaluation reports untracked. Service responsibilities and recovery behavior are in
+[architecture.md](docs/architecture.md).
 
 ### Remote development
 

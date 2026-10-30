@@ -1,0 +1,74 @@
+meta {
+  name: Generate text and caller-schema outputs with OpenAI
+  type: http
+  seq: 9
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/workflows
+  body: json
+  auth: none
+}
+
+body:json {
+  {"operation":"generate","inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  async function finished(id) {
+    const url = bru.getEnvVar("baseUrl") + "/workflows/" + id;
+    for (let attempt = 0; attempt < 900; attempt++) {
+      const response = await bru.sendRequest({ method: "GET", url });
+      expect(response.status).to.equal(200);
+      if (["successful", "failed"].includes(response.data.status)) return response.data;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    throw new Error("Generation did not complete within 90 seconds");
+  }
+
+  test("real model text is persisted and retrievable", async function () {
+    const workflow = await finished(res.getBody().id);
+    expect(workflow.status).to.equal("successful");
+    expect(workflow.result.output.trim()).to.equal("hello");
+    expect(workflow.result.model).to.be.a("string");
+    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/workflows/" + workflow.id });
+    expect(saved.data).to.deep.equal(workflow);
+  });
+
+  for (const [name, prompt, output_schema, expected] of [
+    ["extraction", "Extract the name from: Ada Lovelace.", { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false }, { name: "Ada Lovelace" }],
+    ["classification", "Classify: Please refund my order.", { type: "object", properties: { category: { enum: ["refund", "other"] } }, required: ["category"], additionalProperties: false }, { category: "refund" }]
+  ]) {
+    test("caller-supplied schema supports " + name, async function () {
+      const response = await bru.sendRequest({
+        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
+        headers: { "Content-Type": "application/json" },
+        data: { operation: "generate", inputs: { prompt, output_schema } }
+      });
+      expect(response.status).to.equal(202);
+      const workflow = await finished(response.data.id);
+      expect(workflow.status).to.equal("successful");
+      expect(workflow.result.output).to.deep.equal(expected);
+    });
+  }
+
+  test("upstream failures remain retrievable without raw provider errors", async function () {
+    const response = await bru.sendRequest({
+      method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
+      headers: { "Content-Type": "application/json" },
+      data: { operation: "generate", inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
+    });
+    expect(response.status).to.equal(202);
+    const workflow = await finished(response.data.id);
+    expect(workflow.status).to.equal("failed");
+    expect(workflow.error).to.equal("Workflow failed");
+    expect(workflow.result).to.equal(null);
+  });
+}

@@ -1,9 +1,11 @@
 [dependency-groups]
 dev = [
   "httpx2>=2.16,<3",
+  "pydantic-evals>=2.63,<3",
   "pyright>=1.1,<2",
   "pytest>=8,<10",
   "ruff>=0.11,<1",
+  "types-jsonschema>=4.25,<5",
 ]
 
 [tool.uv.workspace]
@@ -22,7 +24,7 @@ venvPath = "."
 venv = ".venv"
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-include = ["api/src", "api/tests", "worker/src", "worker/tests"]
+include = ["api/src", "api/tests", "worker/src", "worker/tests", "worker/evals"]
 extraPaths = ["api/src", "worker/src"]
 
 [tool.pytest.ini_options]

@@ -3,7 +3,14 @@ from time import sleep
 from dbos import DBOS, WorkflowSerializationFormat
 from pydantic import JsonValue
 
-from agora_worker.models import ScaleRequest, WaitRequest, WorkflowResult, request_adapter
+from agora_worker.generation import generate
+from agora_worker.models import (
+    GenerationRequest,
+    ScaleRequest,
+    WaitRequest,
+    WorkflowResult,
+    request_adapter,
+)
 
 QUEUE_NAME = "agora-workflows-v1"
 WORKFLOW_NAME = "agora.execute.v1"
@@ -32,6 +39,8 @@ def wait(seconds: float) -> None:
 @DBOS.workflow(name=WORKFLOW_NAME, serialization_type=WorkflowSerializationFormat.PORTABLE)
 def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     request = request_adapter.validate_python(payload)
+    if isinstance(request, GenerationRequest):
+        return generate(request.inputs).model_dump(mode="json")
     if isinstance(request, WaitRequest):
         wait(request.inputs.seconds)
         value = add(2, 3)

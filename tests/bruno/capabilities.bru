@@ -1,0 +1,33 @@
+meta {
+  name: Discover model generation
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/capabilities
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body[0].id: eq generate
+}
+
+tests {
+  test("discovery exposes schemas and worker credential prerequisites", function () {
+    const capability = res.getBody()[0];
+    expect(capability.input_schema.properties).to.have.property("output_schema");
+    expect(capability.credentials).to.deep.equal(["OPENAI_API_KEY (worker)"]);
+  });
+
+  test("invalid output schemas are rejected", async function () {
+    await bru.sendRequest({
+      method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
+      headers: { "Content-Type": "application/json" },
+      data: { operation: "generate", inputs: { prompt: "Generate", output_schema: { type: "imaginary" } } }
+    }, (error, response) => {
+      expect(error ? error.status : response.status).to.equal(422);
+    });
+  });
+}

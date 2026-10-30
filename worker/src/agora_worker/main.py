@@ -4,7 +4,7 @@ from threading import Event
 from types import FrameType
 
 import logfire
-from dbos import DBOS, DBOSConfig, DBOSPortableJSONSerializer
+from dbos import DBOS, DBOSConfig
 
 from agora_worker import workflows
 from agora_worker.config import Settings
@@ -32,12 +32,12 @@ def main() -> int:
         inspect_arguments=False,
         data_dir="/tmp/agora-logfire-worker",
     )
+    logfire.instrument_pydantic_ai(include_content=False, include_binary_content=False)
     config: DBOSConfig = {
         "name": "agora-worker",
         "system_database_url": settings.dbos_database_url,
         "run_admin_server": False,
         "enable_otlp": True,
-        "serializer": DBOSPortableJSONSerializer(),
     }
     DBOS(config=config)
     try:
