@@ -7,7 +7,7 @@ from pydantic import BaseModel, ValidationError
 
 from agora_worker.config import Settings
 from agora_worker.tasks.base import Task
-from agora_worker.tasks.registry import register_tasks
+from agora_worker.tasks.utils import register_tasks
 
 
 class Inputs(BaseModel):

@@ -8,7 +8,8 @@ from dbos import DBOS, DBOSConfig
 
 from agora_worker import workflows
 from agora_worker.config import Settings
-from agora_worker.tasks.registry import TASK_REGISTRY, register_tasks
+from agora_worker.tasks import TASK_REGISTRY
+from agora_worker.tasks.utils import register_tasks
 
 logger = logging.getLogger(__name__)
 

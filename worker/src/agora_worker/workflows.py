@@ -2,7 +2,7 @@ from dbos import DBOS, WorkflowSerializationFormat
 from pydantic import JsonValue
 
 from agora_worker.models import TaskRequest
-from agora_worker.tasks.registry import TASK_REGISTRY
+from agora_worker.tasks import TASK_REGISTRY
 
 QUEUE_NAME = "agora-workflows-v1"
 WORKFLOW_NAME = "agora.execute.v1"
