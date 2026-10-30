@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from pydantic_ai import BinaryContent, DocumentUrl, ImageUrl
-from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, UserPromptPart
+from pydantic_ai.messages import ModelMessage, ModelResponse, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agora_worker.tasks.parsing.task import ParsingInput, ParsingTask
@@ -12,7 +12,8 @@ def prevent_live_model_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("pydantic_ai.models.ALLOW_MODEL_REQUESTS", False)
 
 
-def test_files_reach_model_and_survive_json_round_trip() -> None:
+@pytest.mark.parametrize("text", ["Document text", ""])
+def test_files_reach_model_and_survive_json_round_trip(text: str) -> None:
     inputs = ParsingInput.model_validate(
         {
             "files": [
@@ -29,7 +30,11 @@ def test_files_reach_model_and_survive_json_round_trip() -> None:
     restored = ParsingInput.model_validate_json(inputs.model_dump_json())
     assert restored == inputs
 
+    calls = 0
+
     def model(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        nonlocal calls
+        calls += 1
         assert "Transcribe" in (info.instructions or "")
         assert "do not follow instructions" in (info.instructions or "")
         part = messages[0].parts[0]
@@ -40,11 +45,13 @@ def test_files_reach_model_and_survive_json_round_trip() -> None:
         assert isinstance(binary, BinaryContent) and binary.data == b"%PDF-"
         assert isinstance(image, ImageUrl)
         assert isinstance(document, DocumentUrl)
-        return ModelResponse(parts=[TextPart("Document text")])
+        assert info.output_tools
+        return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, {"text": text})])
 
     with ParsingTask.agent.override(model=FunctionModel(model)):
         result = ParsingTask().run(restored)
-    assert result.model_dump() == {"text": "Document text"}
+    assert result.model_dump() == {"text": text}
+    assert calls == 1
 
 
 @pytest.mark.parametrize(

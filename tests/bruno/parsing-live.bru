@@ -31,4 +31,17 @@ tests {
     const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
     expect(saved.data.result).to.deep.equal(run.result);
   });
+
+  test("a blank image produces a successful empty transcription", async function () {
+    const response = await bru.sendRequest({
+      method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/parse/runs",
+      headers: { "Content-Type": "application/json" },
+      data: { inputs: { files: [{ kind: "inline", media_type: "image/png", data: "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAXklEQVR4nO3PMQ0AMAzAsPInvYLYYVWKESTzjhsd8KsBrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BbQHKU9LC7/CP1AAAAABJRU5ErkJggg==" }] } }
+    });
+    expect(response.status).to.equal(202);
+    const run = await waitForRun(bru, response.data.id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result).to.deep.equal({ text: "" });
+  });
+
 }
