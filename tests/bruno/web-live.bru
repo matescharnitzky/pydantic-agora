@@ -1,0 +1,33 @@
+meta {
+  name: Search and fetch with an agent
+  type: http
+  seq: 10
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/tasks/web/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"prompt":"First use web search to find the official Python website and cite it. Then use web_fetch to read https://example.com and include its page title in your answer."}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("real search citations and fetched page metadata are persisted", async function () {
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 120000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result.output).to.include("Example Domain");
+    expect(run.result.fetched_pages.some(page => page.url.startsWith("https://example.com"))).to.equal(true);
+    expect(run.result.text_parts.some(part => part.citations.some(citation => citation.sources.some(source => source.kind === "web")))).to.equal(true);
+  });
+}
