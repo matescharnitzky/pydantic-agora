@@ -25,12 +25,3 @@ class Task[InputT: BaseModel, OutputT: BaseModel](ABC):
             "input_schema": self.input_model.model_json_schema(),
             "output_schema": self.output_model.model_json_schema(),
         }
-
-    def call(self, inputs: dict[str, JsonValue]) -> dict[str, JsonValue]:
-        """Validate JSON inputs, invoke run(), and serialize its validated output.
-
-        The DBOS workflow uses this method to adapt a saved JSON request to run().
-        """
-        validated_input = self.input_model.model_validate(inputs)
-        result = self.run(validated_input)
-        return self.output_model.model_validate(result).model_dump(mode="json")

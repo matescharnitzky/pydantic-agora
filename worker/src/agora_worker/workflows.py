@@ -14,4 +14,7 @@ def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     task_type = next((item for item in TASK_REGISTRY if item.id == request.task), None)
     if task_type is None:
         raise ValueError(f"Unknown task: {request.task}")
-    return task_type().call(request.inputs)
+    task = task_type()
+    inputs = task.input_model.model_validate(request.inputs)
+    output = task.run(inputs)
+    return task.output_model.model_validate(output).model_dump(mode="json")

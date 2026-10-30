@@ -1,10 +1,12 @@
 import os
+from inspect import unwrap
 from uuid import uuid4
 
 import psycopg
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from agora_worker import workflows
 from agora_worker.config import Settings
 from agora_worker.tasks.base import Task
 from agora_worker.tasks.utils import register_tasks
@@ -28,10 +30,14 @@ class LengthTask(Task[Inputs, Result]):
         return Result(length=len(inputs.text))
 
 
-def test_task_validates_inputs_and_calls_function() -> None:
-    assert LengthTask().call({"text": "abc"}) == {"length": 3}
+def test_workflow_validates_inputs_before_running_typed_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(workflows, "TASK_REGISTRY", [LengthTask])
+    execute = unwrap(workflows.execute)
+    assert execute({"task": "length", "inputs": {"text": "abc"}}) == {"length": 3}
     with pytest.raises(ValidationError):
-        LengthTask().call({"text": 1})
+        execute({"task": "length", "inputs": {"text": 1}})
 
 
 def test_duplicate_tasks_are_rejected_before_database_access() -> None:
