@@ -2,8 +2,7 @@ import pytest
 from pydantic import ValidationError
 from pydantic_ai.models import test
 
-from agora_worker.generation import agent, generate
-from agora_worker.models import GenerationInputs
+from agora_worker.tasks.generation.task import GenerationInputs, agent, generate
 
 
 @pytest.fixture(autouse=True)

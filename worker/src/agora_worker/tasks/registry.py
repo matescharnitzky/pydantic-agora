@@ -5,9 +5,20 @@ import psycopg
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, JsonValue
 
+from agora_worker.tasks.dummy.task import (
+    DivideInputs,
+    ScaleInputs,
+    WaitInputs,
+    WorkflowResult,
+    add_then_scale,
+    divide_sum,
+    wait_then_add,
+)
+from agora_worker.tasks.generation.task import GenerationInputs, GenerationResult, generate
+
 
 @dataclass(frozen=True)
-class Capability:
+class Task:
     id: str
     function: Callable[..., BaseModel]
     input_model: type[BaseModel]
@@ -29,12 +40,45 @@ class Capability:
         return self.output_model.model_validate(result).model_dump(mode="json")
 
 
-def register_capabilities(
-    registry: list[Capability], database_url: str, *, application: str = "agora-worker"
+TASK_REGISTRY: list[Task] = [
+    Task(
+        id="generate",
+        function=generate,
+        input_model=GenerationInputs,
+        output_model=GenerationResult,
+        description="Generate text with an OpenAI model.",
+        credentials=["OPENAI_API_KEY (worker)"],
+    ),
+    Task(
+        id="add_then_scale",
+        function=add_then_scale,
+        input_model=ScaleInputs,
+        output_model=WorkflowResult,
+        description="Add two numbers and optionally double a positive total.",
+    ),
+    Task(
+        id="divide_sum",
+        function=divide_sum,
+        input_model=DivideInputs,
+        output_model=WorkflowResult,
+        description="Add two numbers and divide their sum.",
+    ),
+    Task(
+        id="wait_then_add",
+        function=wait_then_add,
+        input_model=WaitInputs,
+        output_model=WorkflowResult,
+        description="Wait before adding two fixed numbers; used to verify recovery.",
+    ),
+]
+
+
+def register_tasks(
+    registry: list[Task], database_url: str, *, application: str = "agora-worker"
 ) -> None:
-    ids = [capability.id for capability in registry]
+    ids = [task.id for task in registry]
     if len(ids) != len(set(ids)):
-        raise ValueError("Duplicate capability id")
+        raise ValueError("Duplicate task id")
     with psycopg.connect(database_url, connect_timeout=5) as connection:
         connection.execute("CREATE SCHEMA IF NOT EXISTS agora")
         connection.execute(
@@ -44,5 +88,5 @@ def register_capabilities(
         connection.execute(
             "INSERT INTO agora.capability_registry (application, capabilities) VALUES (%s, %s) "
             "ON CONFLICT (application) DO UPDATE SET capabilities = EXCLUDED.capabilities",
-            (application, Jsonb([capability.metadata() for capability in registry])),
+            (application, Jsonb([task.metadata() for task in registry])),
         )

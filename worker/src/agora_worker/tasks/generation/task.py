@@ -1,7 +1,20 @@
+from pydantic import Field
 from pydantic_ai import Agent
 from pydantic_ai.durable_exec.dbos import DBOSDurability
 
-from agora_worker.models import GenerationInputs, GenerationResult
+from agora_worker.models import ContractModel
+
+
+class GenerationInputs(ContractModel):
+    prompt: str = Field(min_length=1)
+    instructions: str = ""
+    model: str = Field(default="gpt-5-mini", min_length=1)
+
+
+class GenerationResult(ContractModel):
+    output: str
+    model: str
+
 
 agent = Agent[GenerationInputs, str](
     "openai-responses:gpt-5-mini",

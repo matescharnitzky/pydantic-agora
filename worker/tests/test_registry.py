@@ -6,7 +6,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from agora_worker.config import Settings
-from agora_worker.registry import Capability, register_capabilities
+from agora_worker.tasks.registry import Task, register_tasks
 
 
 class Inputs(BaseModel):
@@ -21,7 +21,7 @@ def length(inputs: Inputs) -> Result:
     return Result(length=len(inputs.text))
 
 
-capability = Capability(
+task = Task(
     id="length",
     function=length,
     input_model=Inputs,
@@ -30,15 +30,15 @@ capability = Capability(
 )
 
 
-def test_capability_validates_inputs_and_calls_function() -> None:
-    assert capability.call({"text": "abc"}) == {"length": 3}
+def test_task_validates_inputs_and_calls_function() -> None:
+    assert task.call({"text": "abc"}) == {"length": 3}
     with pytest.raises(ValidationError):
-        capability.call({"text": 1})
+        task.call({"text": 1})
 
 
-def test_duplicate_capabilities_are_rejected_before_database_access() -> None:
-    with pytest.raises(ValueError, match="Duplicate capability"):
-        register_capabilities([capability, capability], "not-a-database-url")
+def test_duplicate_tasks_are_rejected_before_database_access() -> None:
+    with pytest.raises(ValueError, match="Duplicate task"):
+        register_tasks([task, task], "not-a-database-url")
 
 
 @pytest.mark.integration
@@ -48,14 +48,14 @@ def test_registration_publishes_schemas_and_replaces_previous_catalog() -> None:
     database_url = str(Settings().database_url)
     application = f"registry-test-{uuid4()}"
     try:
-        register_capabilities([capability], database_url, application=application)
+        register_tasks([task], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(
                 "SELECT capabilities FROM agora.capability_registry WHERE application = %s",
                 (application,),
             ).fetchone()
-            assert row == ([capability.metadata()],)
-        register_capabilities([], database_url, application=application)
+            assert row == ([task.metadata()],)
+        register_tasks([], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(
                 "SELECT capabilities FROM agora.capability_registry WHERE application = %s",

@@ -8,7 +8,7 @@ from dbos import DBOS, DBOSConfig
 
 from agora_worker import workflows
 from agora_worker.config import Settings
-from agora_worker.registry import register_capabilities
+from agora_worker.tasks.registry import TASK_REGISTRY, register_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def main() -> int:
     DBOS(config=config)
     try:
         DBOS.launch()
-        register_capabilities(workflows.REGISTRY, str(settings.database_url))
+        register_tasks(TASK_REGISTRY, str(settings.database_url))
         DBOS.register_queue(workflows.QUEUE_NAME, worker_concurrency=4)
         logger.info("Agora worker started; durable workflow enabled")
         stopped.wait()
