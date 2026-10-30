@@ -19,7 +19,7 @@ The application works with the following environment variables.
 
 | Variable | Value |
 |---|---|
-| `OPENAI_API_KEY` | Required in the worker for model generation; optional for dummy workflows |
+| `OPENAI_API_KEY` | Optional; not used yet |
 | `LOGFIRE_TOKEN` | Optional; sends API and worker traces to Logfire |
 | `POSTGRES_USER` | Required: database role |
 | `POSTGRES_PASSWORD` | Required: database password |
@@ -91,22 +91,6 @@ Run development mode in Docker:
 ```sh
 make dev  # Start the stack and watch for changes; keep this terminal open
 ```
-
-### Model generation
-
-`GET /capabilities` lists worker capabilities with their Pydantic-generated input and output
-schemas. Submit a workflow, then poll `GET /workflows/{id}` for its status and result:
-
-```json
-{"operation": "generate", "inputs": {"prompt": "Say hello", "instructions": "Be concise"}}
-```
-
-Generation returns `output` (text) and `model`. It uses OpenAI Responses with `gpt-5-mini` by
-default; override it with `inputs.model`. The API checks the operation and request envelope;
-the worker validates inputs and applies defaults. Invalid inputs produce a failed workflow.
-
-Regular checks do not call a live model. Run paid OpenAI checks explicitly with
-`npm run --workspace tests test:bruno:live`.
 
 ### Remote development
 
