@@ -22,6 +22,8 @@ class WorkspaceOutput(BaseModel):
 
 
 class WorkspaceTask(Task[WorkspaceInput, WorkspaceOutput]):
+    """Answer using read-only tools against the worker's mounted /workspace directory."""
+
     id = "workspace"
     description = "Answer questions using read, list, and search tools in the mounted workspace."
     input_model = WorkspaceInput
@@ -45,6 +47,11 @@ class WorkspaceTask(Task[WorkspaceInput, WorkspaceOutput]):
     )
 
     def run(self, inputs: WorkspaceInput) -> WorkspaceOutput:
+        """Run the agent and report requested read paths once, in first-request order.
+
+        Paths reflect read requests, including unsuccessful ones, rather than all files
+        discovered by list or search tools.
+        """
         result = self.agent.run_sync(inputs.prompt, deps=inputs)
         paths = [
             args["path"]

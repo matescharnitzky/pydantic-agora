@@ -35,6 +35,8 @@ class WebOutput(BaseModel):
 
 
 class WebTask(Task[WebInput, WebOutput]):
+    """Search at the provider and fetch page contents in the worker."""
+
     id = "web"
     description = "Answer using OpenAI-native web search and a worker-executed page-fetch tool."
     input_model = WebInput
@@ -54,6 +56,7 @@ class WebTask(Task[WebInput, WebOutput]):
     )
 
     def run(self, inputs: WebInput) -> WebOutput:
+        """Collect text and citations from all model responses and successful fetched pages."""
         result = self.agent.run_sync(inputs.prompt, deps=inputs)
         text_parts = [
             CitedText(text=part.content, citations=part.citations or [])

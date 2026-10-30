@@ -9,6 +9,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("", response_model=list[Task])
 def list_tasks(connection: DatabaseConnection) -> list[Task]:
+    """Read the task catalog published by the worker at startup."""
     return tasks.list_tasks(connection)
 
 

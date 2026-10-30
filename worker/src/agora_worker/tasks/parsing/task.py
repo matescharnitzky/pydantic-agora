@@ -21,6 +21,7 @@ class InlineFile(BaseModel):
     @field_validator("data", mode="before")
     @classmethod
     def validate_base64(cls, value: object) -> object:
+        """Reject malformed or empty base64 before Pydantic decodes the file content."""
         if not isinstance(value, str | bytes):
             raise ValueError("File data must be base64 text")
         try:
@@ -79,6 +80,11 @@ class ParsingTask(Task[ParsingInput, ParsingOutput]):
     )
 
     def run(self, inputs: ParsingInput) -> ParsingOutput:
+        """Send decoded inline files or remote URLs to the provider in input order.
+
+        Remote URLs must stay accessible to the provider until read; fetch and model
+        failures propagate to the workflow.
+        """
         prompt: list[UserContent] = ["Extract the readable text from these files."]
         for file in inputs.files:
             if isinstance(file, InlineFile):

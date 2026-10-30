@@ -36,6 +36,7 @@ class GenerationTask(Task[GenerationInput, GenerationOutput]):
     )
 
     def run(self, inputs: GenerationInput) -> GenerationOutput:
+        """Apply request instructions without changing the shared agent configuration."""
         result = self.agent.run_sync(
             inputs.prompt,
             instructions=inputs.instructions,

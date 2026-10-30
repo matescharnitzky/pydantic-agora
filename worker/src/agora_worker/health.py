@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_database(settings: Settings) -> bool:
+    """Probe PostgreSQL with connection and query timeouts, returning False on database errors."""
     try:
         with psycopg.connect(
             str(settings.database_url), connect_timeout=2, options="-c statement_timeout=2000"

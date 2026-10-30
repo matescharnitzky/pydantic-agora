@@ -42,12 +42,13 @@ class BooleanQuestion(BaseModel):
     question: str = ""
 
     def model_field(self, name: str) -> AnswerField:
-        # A bounded float requests the actual yes probability, not the confidence margin.
+        """Request the yes probability as a bounded float, using the name as fallback text."""
         return float, Field(ge=0, le=1, description=self.question or name)
 
     def decode_answer(
         self, value: float | int | str, _response: ModelResponse, _key: str
     ) -> BooleanAnswer:
+        """Interpret a yes probability of at least one half as true."""
         probability = float(value)
         return BooleanAnswer(value=probability >= 0.5, probability_yes=probability)
 
@@ -62,16 +63,19 @@ class ChoiceQuestion(BaseModel):
     @field_validator("options")
     @classmethod
     def unique_options(cls, options: list[str]) -> list[str]:
+        """Reject duplicate labels so each choice identifies a distinct outcome."""
         if len(set(options)) != len(options):
             raise ValueError("Choice options must be unique")
         return options
 
     def model_field(self, name: str) -> AnswerField:
+        """Constrain Jev's response to the supplied choice labels."""
         return Choices(self.options), Field(description=self.question or name)
 
     def decode_answer(
         self, value: float | int | str, response: ModelResponse, key: str
     ) -> ChoiceAnswer:
+        """Decode the selected value using Jev's required per-field confidence details."""
         details = response.provider_details or {}
         return ChoiceAnswer(
             value=str(value),
@@ -92,7 +96,7 @@ class RubricQuestion(BaseModel):
     )
 
     def model_field(self, name: str) -> AnswerField:
-        # Described integer levels starting at zero are the native decision-model rubric shape.
+        """Encode ordered rubric levels as described integers starting at zero."""
         return int, Field(
             ge=0,
             le=len(self.levels) - 1,
@@ -108,6 +112,7 @@ class RubricQuestion(BaseModel):
     def decode_answer(
         self, value: float | int | str, response: ModelResponse, key: str
     ) -> RubricAnswer:
+        """Decode the rubric level using Jev's required scores and confidence details."""
         details = response.provider_details or {}
         return RubricAnswer(
             value=int(value),
@@ -164,6 +169,11 @@ class DecisionTask(Task[DecisionInput, DecisionOutput]):
     )
 
     def run(self, inputs: DecisionInput) -> DecisionOutput:
+        """Map collision-safe output fields back to caller names and decode Jev's details.
+
+        Question insertion order must be preserved when building and decoding fields.
+        Missing provider confidence or score details propagate as errors.
+        """
         result = self.agent.run_sync(
             inputs.text,
             output_type=create_answer_model(inputs.questions),

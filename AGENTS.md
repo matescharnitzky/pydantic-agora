@@ -36,6 +36,7 @@ Agora is a runtime for the Pydantic ecosystem, not affiliated with or endorsed b
 ### Documentation
 
 - Prefer concise, human-written documentation. LLM-generated text should be brief, reviewed, and written for people. Use plain language and Mermaid diagrams where you see fit.
+- Keep Python docstrings brief: explain behavior beyond the signature, including useful assumptions, side effects, or failures. Avoid repeating types, obvious names, and shared infrastructure details. Class docstrings are optional; use `@typing.override` for trivial overrides that inherit their documentation.
 - Document implemented behavior. Remove repetition and historical discussion that merely narrates the code.
 - Keep setup and development instructions in [README.md](README.md) and architecture in [architecture.md](docs/architecture.md). Reference these instead of duplicating them.
 

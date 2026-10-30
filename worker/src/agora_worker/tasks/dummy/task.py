@@ -23,22 +23,27 @@ class DummyOutput(BaseModel):
 
 @DBOS.step()
 def wait(seconds: float) -> None:
+    """Block the worker thread for the requested delay."""
     sleep(seconds)
 
 
 @DBOS.step()
 def add(left: int, right: int, fail: bool) -> int:
+    """Raise an intentional failure before adding when requested."""
     if fail:
         raise ValueError("Dummy task failed")
     return left + right
 
 
 class DummyTask(Task[DummyInput, DummyOutput]):
+    """Exercise workflow success and failure paths without external services."""
+
     id = "dummy"
     description = "Wait and add numbers, with an optional failure for runtime checks."
     input_model = DummyInput
     output_model = DummyOutput
 
     def run(self, inputs: DummyInput) -> DummyOutput:
+        """Wait before adding; an intentional failure happens after the delay completes."""
         wait(inputs.seconds)
         return DummyOutput(value=add(inputs.left, inputs.right, inputs.fail))
