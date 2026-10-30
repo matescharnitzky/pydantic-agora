@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/tasks/add_then_scale/runs
+  url: {{baseUrl}}/tasks/dummy/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"inputs":{"left":2,"right":3,"double_positive":true}}
+  {"inputs":{"left":2,"right":3}}
 }
 
 assert {
@@ -43,16 +43,16 @@ tests {
     expect(saved.data).to.deep.equal(run);
   }
 
-  test("separate worker saves the doubled result", async function () {
+  test("separate worker saves the result", async function () {
     const id = res.getBody().id;
     expect(res.getHeaders().location).to.equal("/runs/" + id);
-    await checkRun(id, "add_then_scale", { left: 2, right: 3, double_positive: true }, { value: 10, branch: "doubled" });
+    await checkRun(id, "dummy", { left: 2, right: 3 }, { value: 5 });
   });
 
   for (const [name, task, inputs, result] of [
-    ["worker defaults with submitted inputs", "add_then_scale", { left: 2, right: 3 }, { value: 5, branch: "unchanged" }],
-    ["negative sum", "add_then_scale", { left: -5, right: 2, double_positive: true }, { value: -3, branch: "unchanged" }],
-    ["division", "divide_sum", { left: 2, right: 4, divisor: 3 }, { value: 2, branch: "divided" }]
+    ["defaults with submitted inputs", "dummy", {}, { value: 5 }],
+    ["negative sum", "dummy", { left: -5, right: 2 }, { value: -3 }],
+    ["wait and sum", "dummy", { left: 4, right: 6, seconds: 0.05 }, { value: 10 }]
   ]) {
     test("separate worker persists " + name, async function () {
       const response = await bru.sendRequest({

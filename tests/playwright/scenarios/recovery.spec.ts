@@ -5,7 +5,7 @@ test.use({ baseURL: process.env.API_BASE_URL ?? "http://localhost:8000" });
 test("an in-progress run completes after the worker crashes and restarts", async ({ request, worker }) => {
   test.setTimeout(60_000);
   const input = { inputs: { seconds: 5 } };
-  const submitted = await request.post("/tasks/wait_then_add/runs", { data: input });
+  const submitted = await request.post("/tasks/dummy/runs", { data: input });
   expect(submitted.status()).toBe(202);
   const { id } = await submitted.json();
   const path = `/runs/${id}`;
@@ -22,7 +22,7 @@ test("an in-progress run completes after the worker crashes and restarts", async
     await worker.crash();
     const response = await request.get(path);
     expect(response.status()).toBe(200);
-    expect(await response.json()).toMatchObject({ id, status: "running", request: { task: "wait_then_add", ...input }, result: null });
+    expect(await response.json()).toMatchObject({ id, status: "running", request: { task: "dummy", ...input }, result: null });
   });
 
   await test.step("Restart the worker and retrieve the completed result", async () => {
@@ -34,8 +34,8 @@ test("an in-progress run completes after the worker crashes and restarts", async
     }, { timeout: 30_000 }).toMatchObject({
       id,
       status: "successful",
-      request: { task: "wait_then_add", ...input },
-      result: { value: 5, branch: "unchanged" },
+      request: { task: "dummy", ...input },
+      result: { value: 5 },
       error: null,
     });
   });

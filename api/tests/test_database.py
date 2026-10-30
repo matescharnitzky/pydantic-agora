@@ -27,4 +27,4 @@ def test_discovery_reads_published_worker_registry(app: FastAPI) -> None:
     assert "generate" in tasks
     assert "prompt" in tasks["generate"]["input_schema"]["properties"]
     assert tasks["generate"]["output_schema"]["properties"]["output"]["type"] == "string"
-    assert "add_then_scale" in tasks
+    assert "dummy" in tasks

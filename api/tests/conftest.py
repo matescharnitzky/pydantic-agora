@@ -30,7 +30,7 @@ def app() -> Iterator[FastAPI]:
                 "input_schema": {},
                 "output_schema": {},
             }
-            for name in ["add_then_scale", "divide_sum"]
+            for name in ["dummy"]
         ],
     )
     app.dependency_overrides[get_database_connection] = lambda: connection

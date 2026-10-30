@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/tasks/add_then_scale/runs
+  url: {{baseUrl}}/tasks/dummy/runs
   body: json
   auth: none
 }
@@ -41,10 +41,10 @@ tests {
   });
 
   for (const [name, task, inputs] of [
-    ["numeric string", "add_then_scale", { left: "1", right: 2 }],
-    ["boolean integer", "add_then_scale", { left: true, right: 2 }],
-    ["missing divisor", "divide_sum", { left: 1, right: 2 }],
-    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }],
+    ["numeric string", "dummy", { left: "1", right: 2 }],
+    ["boolean integer", "dummy", { left: true, right: 2 }],
+    ["out-of-range wait", "dummy", { seconds: 6 }],
+    ["out-of-range integer", "dummy", { left: 1000001, right: 2 }],
     ["empty prompt", "generate", { prompt: "" }]
   ]) {
     test("worker rejects " + name, async function () {

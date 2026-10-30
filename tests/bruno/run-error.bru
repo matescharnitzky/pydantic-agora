@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/tasks/divide_sum/runs
+  url: {{baseUrl}}/tasks/dummy/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"inputs":{"left":2,"right":3,"divisor":0}}
+  {"inputs":{"fail":true}}
 }
 
 assert {
@@ -32,7 +32,7 @@ tests {
     expect(run.status).to.equal("failed");
     expect(run.result).to.equal(null);
     expect(run.error).to.equal("Run failed");
-    expect(run.request.inputs).to.deep.equal({ left: 2, right: 3, divisor: 0 });
+    expect(run.request.inputs).to.deep.equal({ fail: true });
     expect(run.created_at).to.be.a("number");
     expect(run.updated_at).to.be.a("number");
     const saved = await bru.sendRequest({ method: "GET", url });

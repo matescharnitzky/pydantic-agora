@@ -24,7 +24,7 @@ def test_request_bodies_and_credentials_are_not_recorded(
     app.dependency_overrides[get_worker_client] = lambda: client
 
     response = TestClient(app).post(
-        "/tasks/add_then_scale/runs",
+        "/tasks/dummy/runs",
         json={
             "inputs": {"left": 1, "right": 2, "credential": body_marker},
         },
@@ -51,7 +51,7 @@ def test_storage_error_details_are_not_exported(
 
     http = TestClient(app)
     response = (
-        http.post("/tasks/add_then_scale/runs", json={"inputs": {"left": 1, "right": 2}})
+        http.post("/tasks/dummy/runs", json={"inputs": {"left": 1, "right": 2}})
         if method == "POST"
         else http.get(f"/runs/{uuid4()}")
     )
