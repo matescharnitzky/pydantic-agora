@@ -126,7 +126,7 @@ class DecisionTask(Task[DecisionInput, DecisionOutput]):
 
     agent: ClassVar[Agent[DecisionInput, BaseModel]] = Agent(
         "typesafe:jev-latest",
-        name="agora_decide_v1",
+        name="decide",
         deps_type=DecisionInput,
         output_type=BaseModel,
         instructions="Answer the supplied questions using the provided text as evidence.",
