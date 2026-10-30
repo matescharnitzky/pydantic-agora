@@ -11,7 +11,6 @@ members = [
 [manifest.dependency-groups]
 dev = [
     { name = "httpx2", specifier = ">=2.16,<3" },
-    { name = "pydantic-evals", specifier = ">=2.63,<3" },
     { name = "pyright", specifier = ">=1.1,<2" },
     { name = "pytest", specifier = ">=8,<10" },
     { name = "ruff", specifier = ">=0.11,<1" },
@@ -770,23 +769,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/2a/3a9f6624ee3ea9ccba5249dde11418bb4c35780a7a92608f8768bd3fea39/pydantic_core-2.50.1-cp313-cp313-win32.whl", hash = "sha256:06ead20d39ffd6f2f6f2a8f8a6de67ff8bb1b4f14a8a30e058502514ee2ac685", size = 2101118, upload-time = "2026-10-11T18:33:02.329Z" },
     { url = "https://files.pythonhosted.org/packages/2d/1f/323f78ddd9d9938aac420c1abb4e8ba799fc8bdab0acc67c0593b837c979/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl", hash = "sha256:7816e98acc08119dc0f340ab167048ecc54126316330c1f0caf7c6756c88e28f", size = 2170840, upload-time = "2026-10-11T18:33:03.919Z" },
     { url = "https://files.pythonhosted.org/packages/cb/09/8497c52a739ae425c3ac2f7f56414cbc711c67d374346174f40fe2062644/pydantic_core-2.50.1-cp313-cp313-win_arm64.whl", hash = "sha256:c17799a62c142d61b8a3c51752a7cbc87fe2ad4ccfab10e628a77b405075c662", size = 2161633, upload-time = "2026-10-11T18:33:05.518Z" },
-]
-
-[[package]]
-name = "pydantic-evals"
-version = "2.63.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "logfire-api" },
-    { name = "pydantic" },
-    { name = "pydantic-ai-slim" },
-    { name = "pyyaml" },
-    { name = "rich" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/ed/2322151c1fdebfdc1196dd9af06729db55ef5eb598c373809b036e0afdac/pydantic_evals-2.63.0.tar.gz", hash = "sha256:f63109ea7e5f5e7e15b5b725a6eb9add3565e58f9c0fdf001654cf3998b92283", size = 93488, upload-time = "2026-10-28T02:03:36.669Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/36/9fc90c64f41162c45c7f3b9fbb3e7b4bb0def19b7be10560cb98160fea9d/pydantic_evals-2.63.0-py3-none-any.whl", hash = "sha256:1b7e6587ea4387ceed857eb1846b136368a309af42f888299ba3ecf149ea597a", size = 108670, upload-time = "2026-10-28T02:03:25.891Z" },
 ]
 
 [[package]]

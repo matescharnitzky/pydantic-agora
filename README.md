@@ -84,7 +84,7 @@ make install  # Dependencies and Chromium for browser tests
 make check    # Lint, type checks, and unit tests
 make test-db  # Database/worker integration tests; requires the running stack
 make smoke    # Bruno API checks and Playwright user scenarios; requires the running stack
-make test-models  # Explicit live OpenAI checks and Pydantic Evals; incurs model usage
+make test-models  # Explicit live OpenAI workflow checks; incurs model usage
 ```
 
 Run development mode in Docker:
@@ -95,8 +95,9 @@ make dev  # Start the stack and watch for changes; keep this terminal open
 
 ### Model generation
 
-`GET /capabilities` lists the available capability and its schemas. Submit generation through
-`POST /workflows`, then retrieve its status/result from `GET /workflows/{id}`:
+`GET /capabilities` reads the worker-published capabilities and their schemas from PostgreSQL.
+Submit generation through `POST /workflows`, then retrieve its status/result from
+`GET /workflows/{id}`:
 
 ```json
 {
@@ -118,13 +119,13 @@ make dev  # Start the stack and watch for changes; keep this terminal open
 Omit `output_schema` for plain text. Schemas use JSON Schema draft 2020-12 without references;
 object, array, and scalar results are validated in the worker. Provider-specific model/schema
 restrictions can still fail execution. Results contain `output` and the responding `model`.
+Saved requests retain the inputs as submitted; the worker applies defaults when executing.
 The API never receives the provider key. Model requests use OpenAI Responses and default to
 `gpt-5-mini`; set `inputs.model` to choose another compatible model.
 
 `make check` and `make smoke` do not call a live model. `make test-models` runs the live Bruno
-workflow checks and three Pydantic Evals cases (text, extraction, classification). Keep generated
-evaluation reports untracked. Service responsibilities and recovery behavior are in
-[architecture.md](docs/architecture.md).
+workflow checks for text, extraction, and classification. Service responsibilities and recovery
+behavior are in [architecture.md](docs/architecture.md).
 
 ### Remote development
 

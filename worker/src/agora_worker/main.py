@@ -42,6 +42,7 @@ def main() -> int:
     DBOS(config=config)
     try:
         DBOS.launch()
+        workflows.registry.publish(str(settings.database_url))
         DBOS.register_queue(workflows.QUEUE_NAME, worker_concurrency=4)
         logger.info("Agora worker started; durable workflow enabled")
         stopped.wait()

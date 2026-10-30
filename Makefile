@@ -40,6 +40,5 @@ test-playwright:
 
 test-models:
 	npm run --workspace tests test:bruno:live
-	@./scripts/1password.sh uv run $(UV_ENV_FILE) --all-packages --locked python worker/evals/generation.py
 
 smoke: test-bruno test-playwright

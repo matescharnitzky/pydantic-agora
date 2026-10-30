@@ -5,13 +5,9 @@ from opentelemetry.context import get_current
 from sqlalchemy.exc import SQLAlchemyError
 
 from agora_api.models import (
-    GenerationRequest,
-    GenerationResult,
     Workflow,
     WorkflowRequest,
-    WorkflowResult,
     WorkflowStatus,
-    request_adapter,
 )
 
 QUEUE_NAME = "agora-workflows-v1"
@@ -59,15 +55,14 @@ def get_workflow(client: DBOSClient, workflow_id: str) -> Workflow | None:
         return None
     if workflow.input is None:
         raise ValueError("Missing persisted workflow input")
-    request = request_adapter.validate_python(workflow.input["args"][0])
+    request = WorkflowRequest.model_validate(workflow.input["args"][0])
     status = workflow.status
     public_status = STATUS_MAP[status]
-    result_model = GenerationResult if isinstance(request, GenerationRequest) else WorkflowResult
     return Workflow(
         id=workflow_id,
         status=public_status,
         request=request,
-        result=result_model.model_validate(workflow.output) if status == "SUCCESS" else None,
+        result=workflow.output if status == "SUCCESS" else None,
         error="Workflow failed" if public_status == WorkflowStatus.FAILED else None,
         created_at=workflow.created_at,
         updated_at=workflow.updated_at,

@@ -7,6 +7,8 @@ flowchart LR
     Frontend["Frontend"] -->|Health| API["API"]
     API -->|Enqueue| Postgres[("Postgres")]
     Postgres -->|Dequeue| Worker["Worker"]
+    Worker -->|Publish capabilities| Postgres
+    Postgres -->|Capability schemas| API
     pgAdmin -->|Inspect| Postgres
     API -.->|Traces| Logfire["Logfire"]
     Worker -.->|Traces| Logfire
@@ -21,10 +23,16 @@ flowchart LR
 | Database administration | Inspects the database. | [pgAdmin](https://www.pgadmin.org/) |
 | Observability | Collects and inspects traces. | [Logfire](https://logfire.pydantic.dev/) |
 
-The API validates generation requests and enqueues portable JSON without importing worker code.
+The worker registers operation handlers and publishes their descriptions and JSON Schemas as an
+atomic snapshot in `agora.capability_registry` in the existing PostgreSQL database at startup.
+The API reads that registry for discovery and input validation, then enqueues a generic operation
+and inputs envelope without importing worker code. Results are JSON objects. Adding an operation
+requires registering a worker handler, without changing API types or dispatch. Registry metadata
+persists while the worker is offline; it describes installed capabilities, not worker liveness.
+Worker replicas must run the same capability definitions; mixed-version catalogs are not supported.
 The worker constructs an explicit Pydantic AI `Agent`; `DBOSDurability` checkpoints model calls.
 An output function supplies the caller's JSON Schema and validates the returned JSON before a
-result is saved. API and worker validate their own copies of the HTTP/queue contract.
+result is saved. The worker validates inputs again using its Pydantic models.
 
 Workflow inputs and final results remain portable JSON. Internal Pydantic AI checkpoints use
 DBOS's native Python serialization to preserve typed model responses. Completed model steps are

@@ -49,10 +49,10 @@ tests {
     await checkWorkflow(id, "add_then_scale", { left: 2, right: 3, double_positive: true }, { value: 10, branch: "doubled" });
   });
 
-  for (const [name, operation, inputs, normalized, result] of [
-    ["default inputs", "add_then_scale", { left: 2, right: 3 }, { left: 2, right: 3, double_positive: false }, { value: 5, branch: "unchanged" }],
-    ["negative sum", "add_then_scale", { left: -5, right: 2, double_positive: true }, { left: -5, right: 2, double_positive: true }, { value: -3, branch: "unchanged" }],
-    ["division", "divide_sum", { left: 2, right: 4, divisor: 3 }, { left: 2, right: 4, divisor: 3 }, { value: 2, branch: "divided" }]
+  for (const [name, operation, inputs, result] of [
+    ["worker defaults with submitted inputs", "add_then_scale", { left: 2, right: 3 }, { value: 5, branch: "unchanged" }],
+    ["negative sum", "add_then_scale", { left: -5, right: 2, double_positive: true }, { value: -3, branch: "unchanged" }],
+    ["division", "divide_sum", { left: 2, right: 4, divisor: 3 }, { value: 2, branch: "divided" }]
   ]) {
     test("separate worker persists " + name, async function () {
       const response = await bru.sendRequest({
@@ -61,7 +61,7 @@ tests {
       });
       expect(response.status).to.equal(202);
       expect(response.data.status).to.equal("waiting");
-      await checkWorkflow(response.data.id, operation, normalized, result);
+      await checkWorkflow(response.data.id, operation, inputs, result);
     });
   }
 }

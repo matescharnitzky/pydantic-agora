@@ -1,7 +1,7 @@
-from typing import Annotated, Literal
+from typing import Literal
 
 from jsonschema import Draft202012Validator, SchemaError
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 
 class ContractModel(BaseModel):
@@ -21,23 +21,8 @@ class DivideInputs(Numbers):
     divisor: int = Field(ge=-1_000_000, le=1_000_000)
 
 
-class ScaleRequest(ContractModel):
-    operation: Literal["add_then_scale"]
-    inputs: ScaleInputs
-
-
-class DivideRequest(ContractModel):
-    operation: Literal["divide_sum"]
-    inputs: DivideInputs
-
-
 class WaitInputs(ContractModel):
     seconds: float = Field(ge=0.0, le=5.0)
-
-
-class WaitRequest(ContractModel):
-    operation: Literal["wait_then_add"]
-    inputs: WaitInputs
 
 
 class GenerationInputs(ContractModel):
@@ -71,15 +56,9 @@ class GenerationInputs(ContractModel):
         return self
 
 
-class GenerationRequest(ContractModel):
-    operation: Literal["generate"]
-    inputs: GenerationInputs
-
-
-WorkflowRequest = Annotated[
-    ScaleRequest | DivideRequest | WaitRequest | GenerationRequest, Field(discriminator="operation")
-]
-request_adapter = TypeAdapter(WorkflowRequest)
+class WorkflowRequest(ContractModel):
+    operation: str = Field(min_length=1)
+    inputs: dict[str, JsonValue]
 
 
 class WorkflowResult(ContractModel):

@@ -37,3 +37,38 @@ def generate(inputs: GenerationInputs) -> GenerationResult:
         deps=inputs,
     )
     return GenerationResult(output=result.output, model=result.response.model_name or inputs.model)
+
+
+def generation_input_schema() -> dict[str, JsonValue]:
+    """Publish schema validation rules as standard JSON Schema, without API-specific code."""
+    schema = GenerationInputs.model_json_schema()
+    schema["$defs"] = {
+        "inline": {
+            "if": {"type": "object"},
+            "then": {
+                "not": {"anyOf": [{"required": ["$ref"]}, {"required": ["$dynamicRef"]}]},
+                "additionalProperties": {"$ref": "#/$defs/inline"},
+            },
+            "else": {
+                "if": {"type": "array"},
+                "then": {"items": {"$ref": "#/$defs/inline"}},
+            },
+        }
+    }
+    schema["properties"]["output_schema"] = {
+        "anyOf": [
+            {"type": "null"},
+            {
+                "type": "object",
+                "allOf": [
+                    {"$ref": "https://json-schema.org/draft/2020-12/schema"},
+                    {"$ref": "#/$defs/inline"},
+                ],
+                "properties": {
+                    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"}
+                },
+            },
+        ],
+        "default": None,
+    }
+    return schema
