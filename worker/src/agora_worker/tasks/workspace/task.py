@@ -10,18 +10,20 @@ from pydantic_ai_harness.filesystem import ReadFileCallPart
 from agora_worker.tasks.base import Task
 
 
-class WorkspaceInput(BaseModel):
+class WorkspaceInput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     prompt: str = Field(min_length=1)
 
 
-class WorkspaceOutput(BaseModel):
+class WorkspaceOutput(BaseModel):  # noqa: D101 - Simple data model.
     output: str
     files_requested: list[str]
 
 
 class WorkspaceTask(Task[WorkspaceInput, WorkspaceOutput]):
+    """Answer using read-only tools against the worker's mounted /workspace directory."""
+
     id = "workspace"
     description = "Answer questions using read, list, and search tools in the mounted workspace."
     input_model = WorkspaceInput
@@ -45,6 +47,11 @@ class WorkspaceTask(Task[WorkspaceInput, WorkspaceOutput]):
     )
 
     def run(self, inputs: WorkspaceInput) -> WorkspaceOutput:
+        """Run the agent and report requested read paths once, in first-request order.
+
+        Paths reflect read requests, including unsuccessful ones, rather than all files
+        discovered by list or search tools.
+        """
         result = self.agent.run_sync(inputs.prompt, deps=inputs)
         paths = [
             args["path"]

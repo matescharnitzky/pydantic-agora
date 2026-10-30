@@ -5,7 +5,7 @@ from pydantic import BaseModel, JsonValue
 
 
 class Task[InputT: BaseModel, OutputT: BaseModel](ABC):
-    """Define a task's typed inputs, outputs, and execution contract."""
+    """Define the typed execution contract shared by catalog discovery and workflows."""
 
     id: ClassVar[str]
     description: ClassVar[str]
@@ -14,11 +14,14 @@ class Task[InputT: BaseModel, OutputT: BaseModel](ABC):
 
     @abstractmethod
     def run(self, inputs: InputT) -> OutputT:
-        """Implement task logic using an already validated input model."""
+        """Execute with validated inputs and return the declared output model.
+
+        Failures propagate to the calling workflow; implementations may perform external I/O.
+        """
         ...
 
     def metadata(self) -> dict[str, JsonValue]:
-        """Describe the task and its schemas for PostgreSQL catalog and API discovery."""
+        """Build catalog metadata and JSON schemas for API discovery without running the task."""
         return {
             "id": self.id,
             "description": self.description,

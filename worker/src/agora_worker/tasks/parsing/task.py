@@ -11,7 +11,7 @@ from agora_worker.tasks.base import Task
 MediaType = Literal["application/pdf", "image/png", "image/jpeg", "image/webp"]
 
 
-class InlineFile(BaseModel):
+class InlineFile(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["inline"] = "inline"
@@ -21,6 +21,7 @@ class InlineFile(BaseModel):
     @field_validator("data", mode="before")
     @classmethod
     def validate_base64(cls, value: object) -> object:
+        """Reject malformed or empty base64 before Pydantic decodes the file content."""
         if not isinstance(value, str | bytes):
             raise ValueError("File data must be base64 text")
         try:
@@ -32,7 +33,7 @@ class InlineFile(BaseModel):
         return value
 
 
-class RemoteFile(BaseModel):
+class RemoteFile(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["url"] = "url"
@@ -40,7 +41,7 @@ class RemoteFile(BaseModel):
     url: HttpUrl
 
 
-class ParsingInput(BaseModel):
+class ParsingInput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     files: list[Annotated[InlineFile | RemoteFile, Field(discriminator="kind")]] = Field(
@@ -49,13 +50,15 @@ class ParsingInput(BaseModel):
     )
 
 
-class ParsingOutput(BaseModel):
+class ParsingOutput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     text: str
 
 
 class ParsingTask(Task[ParsingInput, ParsingOutput]):
+    """Extract text from PDFs and images through OpenAI with durable agent execution."""
+
     id = "parse"
     description = "Extract text from PDFs and images with an OpenAI model."
     input_model = ParsingInput
@@ -79,6 +82,11 @@ class ParsingTask(Task[ParsingInput, ParsingOutput]):
     )
 
     def run(self, inputs: ParsingInput) -> ParsingOutput:
+        """Send decoded inline files or remote URLs to the provider in input order.
+
+        Remote URLs must stay accessible to the provider until read; fetch and model
+        failures propagate to the workflow.
+        """
         prompt: list[UserContent] = ["Extract the readable text from these files."]
         for file in inputs.files:
             if isinstance(file, InlineFile):

@@ -14,20 +14,20 @@ type AnswerField = tuple[type[object], FieldInfo]
 type Probability = Annotated[float, Field(ge=0, le=1)]
 
 
-class BooleanAnswer(BaseModel):
+class BooleanAnswer(BaseModel):  # noqa: D101 - Simple data model.
     type: Literal["boolean"] = "boolean"
     value: bool
     probability_yes: Probability
 
 
-class ChoiceAnswer(BaseModel):
+class ChoiceAnswer(BaseModel):  # noqa: D101 - Simple data model.
     type: Literal["choice"] = "choice"
     value: str
     confidence: Probability
     probabilities: dict[str, Probability]
 
 
-class RubricAnswer(BaseModel):
+class RubricAnswer(BaseModel):  # noqa: D101 - Simple data model.
     type: Literal["rubric"] = "rubric"
     value: int
     expected_score: float
@@ -35,24 +35,25 @@ class RubricAnswer(BaseModel):
     probabilities: dict[str, Probability]
 
 
-class BooleanQuestion(BaseModel):
+class BooleanQuestion(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["boolean"]
     question: str = ""
 
     def model_field(self, name: str) -> AnswerField:
-        # A bounded float requests the actual yes probability, not the confidence margin.
+        """Request the yes probability as a bounded float, using the name as fallback text."""
         return float, Field(ge=0, le=1, description=self.question or name)
 
     def decode_answer(
         self, value: float | int | str, _response: ModelResponse, _key: str
     ) -> BooleanAnswer:
+        """Interpret a yes probability of at least one half as true."""
         probability = float(value)
         return BooleanAnswer(value=probability >= 0.5, probability_yes=probability)
 
 
-class ChoiceQuestion(BaseModel):
+class ChoiceQuestion(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["choice"]
@@ -62,16 +63,19 @@ class ChoiceQuestion(BaseModel):
     @field_validator("options")
     @classmethod
     def unique_options(cls, options: list[str]) -> list[str]:
+        """Reject duplicate labels so each choice identifies a distinct outcome."""
         if len(set(options)) != len(options):
             raise ValueError("Choice options must be unique")
         return options
 
     def model_field(self, name: str) -> AnswerField:
+        """Constrain Jev's response to the supplied choice labels."""
         return Choices(self.options), Field(description=self.question or name)
 
     def decode_answer(
         self, value: float | int | str, response: ModelResponse, key: str
     ) -> ChoiceAnswer:
+        """Decode the selected value using Jev's required per-field confidence details."""
         details = response.provider_details or {}
         return ChoiceAnswer(
             value=str(value),
@@ -80,7 +84,7 @@ class ChoiceQuestion(BaseModel):
         )
 
 
-class RubricQuestion(BaseModel):
+class RubricQuestion(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     type: Literal["rubric"]
@@ -92,7 +96,7 @@ class RubricQuestion(BaseModel):
     )
 
     def model_field(self, name: str) -> AnswerField:
-        # Described integer levels starting at zero are the native decision-model rubric shape.
+        """Encode ordered rubric levels as described integers starting at zero."""
         return int, Field(
             ge=0,
             le=len(self.levels) - 1,
@@ -108,6 +112,7 @@ class RubricQuestion(BaseModel):
     def decode_answer(
         self, value: float | int | str, response: ModelResponse, key: str
     ) -> RubricAnswer:
+        """Decode the rubric level using Jev's required scores and confidence details."""
         details = response.provider_details or {}
         return RubricAnswer(
             value=int(value),
@@ -122,7 +127,7 @@ type Question = Annotated[
 ]
 
 
-class DecisionInput(BaseModel):
+class DecisionInput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     text: str = Field(min_length=1)
@@ -132,7 +137,7 @@ class DecisionInput(BaseModel):
 type Answer = Annotated[BooleanAnswer | ChoiceAnswer | RubricAnswer, Field(discriminator="type")]
 
 
-class DecisionOutput(BaseModel):
+class DecisionOutput(BaseModel):  # noqa: D101 - Simple data model.
     answers: dict[str, Answer]
 
 
@@ -148,6 +153,8 @@ def create_answer_model(questions: dict[str, Question]) -> type[BaseModel]:
 
 
 class DecisionTask(Task[DecisionInput, DecisionOutput]):
+    """Answer typed questions through Jev with durable agent execution."""
+
     id = "decide"
     description = "Answer named boolean, choice, and rubric questions with Jev."
     input_model = DecisionInput
@@ -164,6 +171,11 @@ class DecisionTask(Task[DecisionInput, DecisionOutput]):
     )
 
     def run(self, inputs: DecisionInput) -> DecisionOutput:
+        """Map collision-safe output fields back to caller names and decode Jev's details.
+
+        Question insertion order must be preserved when building and decoding fields.
+        Missing provider confidence or score details propagate as errors.
+        """
         result = self.agent.run_sync(
             inputs.text,
             output_type=create_answer_model(inputs.questions),

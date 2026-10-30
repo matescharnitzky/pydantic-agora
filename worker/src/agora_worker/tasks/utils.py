@@ -13,6 +13,11 @@ def register_tasks(
     *,
     application: str = "agora-worker",
 ) -> None:
+    """Replace this application's task catalog in PostgreSQL during worker startup.
+
+    Reject duplicate IDs before connecting. Create the schema/table if needed and commit
+    the catalog atomically; constructing task instances must not require arguments.
+    """
     ids = [task_type.id for task_type in registry]
     if len(ids) != len(set(ids)):
         raise ValueError("Duplicate task id")

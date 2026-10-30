@@ -7,20 +7,22 @@ from pydantic_ai.durable_exec.dbos import DBOSDurability
 from agora_worker.tasks.base import Task
 
 
-class GenerationInput(BaseModel):
+class GenerationInput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     prompt: str = Field(min_length=1)
     instructions: str = ""
 
 
-class GenerationOutput(BaseModel):
+class GenerationOutput(BaseModel):  # noqa: D101 - Simple data model.
     model_config = ConfigDict(extra="forbid", strict=True)
 
     output: str
 
 
 class GenerationTask(Task[GenerationInput, GenerationOutput]):
+    """Generate text through OpenAI with DBOS durability for agent execution."""
+
     id = "generate"
     description = "Generate text with an OpenAI model."
     input_model = GenerationInput
@@ -36,6 +38,7 @@ class GenerationTask(Task[GenerationInput, GenerationOutput]):
     )
 
     def run(self, inputs: GenerationInput) -> GenerationOutput:
+        """Send the prompt and per-run instructions to OpenAI; provider failures propagate."""
         result = self.agent.run_sync(
             inputs.prompt,
             instructions=inputs.instructions,
