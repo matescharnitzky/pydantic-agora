@@ -1,0 +1,37 @@
+meta {
+  name: Retrieve a saved run failure
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/tasks/dummy/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"fail":true}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+
+  test("failed run remains retrievable", async function () {
+    const url = bru.getEnvVar("baseUrl") + "/runs/" + res.getBody().id;
+    const run = await waitForRun(bru, res.getBody().id);
+    expect(run.status).to.equal("failed");
+    expect(run.result).to.equal(null);
+    expect(run.error).to.equal("Run failed");
+    expect(run.request.inputs).to.deep.equal({ fail: true });
+    expect(run.created_at).to.be.a("number");
+    expect(run.updated_at).to.be.a("number");
+    const saved = await bru.sendRequest({ method: "GET", url });
+    expect(saved.status).to.equal(200);
+    expect(saved.data).to.deep.equal(run);
+  });
+}

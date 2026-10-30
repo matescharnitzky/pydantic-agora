@@ -38,27 +38,23 @@ def wait_for_status(handle: WorkflowHandle[object], expected_status: str) -> Non
     pytest.fail(f"Workflow did not reach {expected_status} within 20 seconds")
 
 
-@pytest.mark.parametrize("double_positive", [False, True])
-def test_worker_persists_meaningful_steps(client: DBOSClient, double_positive: bool) -> None:
+@pytest.mark.parametrize("fail", [False, True])
+def test_worker_persists_successful_and_failed_steps(client: DBOSClient, fail: bool) -> None:
     handle: WorkflowHandle[object] = client.enqueue(
         {
             "queue_name": QUEUE_NAME,
             "workflow_name": WORKFLOW_NAME,
             "serialization_type": WorkflowSerializationFormat.PORTABLE,
         },
-        {
-            "operation": "add_then_scale",
-            "inputs": {"left": 2, "right": 3, "double_positive": double_positive},
-        },
+        {"task": "dummy", "inputs": {"left": 2, "right": 3, "fail": fail}},
     )
-    wait_for_status(handle, "SUCCESS")
+    wait_for_status(handle, "ERROR" if fail else "SUCCESS")
     steps = client.list_workflow_steps(handle.get_workflow_id())
-    assert [step["function_name"] for step in steps] == (
-        ["add", "double"] if double_positive else ["add"]
-    )
-    assert steps[0]["output"] == 5
-    if double_positive:
-        assert steps[1]["output"] == 10
+    assert [step["function_name"] for step in steps] == ["wait", "add"]
+    assert steps[0]["output"] is None
+    if not fail:
+        assert steps[1]["output"] == 5
+        assert handle.get_result() == {"value": 5}
 
 
 def test_worker_validates_inputs_independently(client: DBOSClient) -> None:
@@ -68,7 +64,7 @@ def test_worker_validates_inputs_independently(client: DBOSClient) -> None:
             "workflow_name": WORKFLOW_NAME,
             "serialization_type": WorkflowSerializationFormat.PORTABLE,
         },
-        {"operation": "unregistered", "inputs": {}},
+        {"task": "unregistered", "inputs": {}},
     )
     wait_for_status(handle, "ERROR")
     assert client.list_workflow_steps(handle.get_workflow_id()) == []

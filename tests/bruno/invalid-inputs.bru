@@ -1,37 +1,51 @@
 meta {
-  name: Reject invalid operation inputs
+  name: Worker rejects invalid task inputs
   type: http
   seq: 6
 }
 
 post {
-  url: {{baseUrl}}/workflows
+  url: {{baseUrl}}/tasks/dummy/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"operation":"add_then_scale","inputs":{"left":"two","right":3}}
+  {"inputs":{"left":"two","right":3}}
 }
 
 assert {
-  res.status: eq 422
+  res.status: eq 202
 }
 
 tests {
-  for (const [name, operation, inputs] of [
-    ["numeric string", "add_then_scale", { left: "1", right: 2 }],
-    ["boolean integer", "add_then_scale", { left: true, right: 2 }],
-    ["missing divisor", "divide_sum", { left: 1, right: 2 }],
-    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }]
+  const { waitForRun } = require("./helpers/runs.js");
+
+  async function checkFailed(id) {
+    const run = await waitForRun(bru, id);
+    expect(run.status).to.equal("failed");
+    expect(run.result).to.equal(null);
+    expect(run.error).to.equal("Run failed");
+  }
+
+  test("invalid inputs are reported as a failed run", async function () {
+    await checkFailed(res.getBody().id);
+  });
+
+  for (const [name, task, inputs] of [
+    ["numeric string", "dummy", { left: "1", right: 2 }],
+    ["boolean integer", "dummy", { left: true, right: 2 }],
+    ["out-of-range wait", "dummy", { seconds: 6 }],
+    ["out-of-range integer", "dummy", { left: 1000001, right: 2 }],
+    ["empty prompt", "generate", { prompt: "" }]
   ]) {
-    test("reject " + name, async function () {
-      await bru.sendRequest({
-        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" }, data: { operation, inputs }
-      }, (error, response) => {
-        expect(error ? error.status : response.status).to.equal(422);
+    test("worker rejects " + name, async function () {
+      const response = await bru.sendRequest({
+        method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/" + task + "/runs",
+        headers: { "Content-Type": "application/json" }, data: { inputs }
       });
+      expect(response.status).to.equal(202);
+      await checkFailed(response.data.id);
     });
   }
 }

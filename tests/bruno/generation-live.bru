@@ -1,0 +1,35 @@
+meta {
+  name: Generate text with OpenAI
+  type: http
+  seq: 9
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/tasks/generate/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+
+  test("real model text is persisted and retrievable", async function () {
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result.output.trim()).to.equal("hello");
+    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
+    expect(saved.data).to.deep.equal(run);
+  });
+
+}

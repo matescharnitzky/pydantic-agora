@@ -1,17 +1,17 @@
 meta {
-  name: Submit and retrieve a durable workflow
+  name: Submit and retrieve a durable run
   type: http
   seq: 3
 }
 
 post {
-  url: {{baseUrl}}/workflows
+  url: {{baseUrl}}/tasks/dummy/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"operation":"add_then_scale","inputs":{"left":2,"right":3,"double_positive":true}}
+  {"inputs":{"left":2,"right":3}}
 }
 
 assert {
@@ -20,48 +20,42 @@ assert {
 }
 
 tests {
-  async function checkWorkflow(id, operation, inputs, result) {
-    const url = bru.getEnvVar("baseUrl") + "/workflows/" + id;
-    let workflow;
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const response = await bru.sendRequest({ method: "GET", url });
-      expect(response.status).to.equal(200);
-      workflow = response.data;
-      if (["successful", "failed"].includes(workflow.status)) break;
-      expect(["waiting", "running"]).to.include(workflow.status);
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    expect(workflow.status).to.equal("successful");
-    expect(workflow.result).to.deep.equal(result);
-    expect(workflow.request.operation).to.equal(operation);
-    expect(workflow.request.inputs).to.deep.equal(inputs);
-    expect(workflow.created_at).to.be.a("number");
-    expect(workflow.updated_at).to.be.a("number");
-    expect(workflow.error).to.equal(null);
+  const { waitForRun } = require("./helpers/runs.js");
+
+  async function checkRun(id, task, inputs, result) {
+    const url = bru.getEnvVar("baseUrl") + "/runs/" + id;
+    const run = await waitForRun(bru, id);
+    expect(run.status).to.equal("successful");
+    expect(run.result).to.deep.equal(result);
+    expect(run.request.task).to.equal(task);
+    expect(run.request.inputs).to.deep.equal(inputs);
+    expect(run.created_at).to.be.a("number");
+    expect(run.updated_at).to.be.a("number");
+    expect(run.error).to.equal(null);
     const saved = await bru.sendRequest({ method: "GET", url });
     expect(saved.status).to.equal(200);
-    expect(saved.data).to.deep.equal(workflow);
+    expect(saved.data).to.deep.equal(run);
   }
 
-  test("separate worker saves the doubled result", async function () {
+  test("separate worker saves the result", async function () {
     const id = res.getBody().id;
-    expect(res.getHeaders().location).to.equal("/workflows/" + id);
-    await checkWorkflow(id, "add_then_scale", { left: 2, right: 3, double_positive: true }, { value: 10, branch: "doubled" });
+    expect(res.getHeaders().location).to.equal("/runs/" + id);
+    await checkRun(id, "dummy", { left: 2, right: 3 }, { value: 5 });
   });
 
-  for (const [name, operation, inputs, normalized, result] of [
-    ["default inputs", "add_then_scale", { left: 2, right: 3 }, { left: 2, right: 3, double_positive: false }, { value: 5, branch: "unchanged" }],
-    ["negative sum", "add_then_scale", { left: -5, right: 2, double_positive: true }, { left: -5, right: 2, double_positive: true }, { value: -3, branch: "unchanged" }],
-    ["division", "divide_sum", { left: 2, right: 4, divisor: 3 }, { left: 2, right: 4, divisor: 3 }, { value: 2, branch: "divided" }]
+  for (const [name, task, inputs, result] of [
+    ["defaults with submitted inputs", "dummy", {}, { value: 5 }],
+    ["negative sum", "dummy", { left: -5, right: 2 }, { value: -3 }],
+    ["wait and sum", "dummy", { left: 4, right: 6, seconds: 0.05 }, { value: 10 }]
   ]) {
     test("separate worker persists " + name, async function () {
       const response = await bru.sendRequest({
-        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" }, data: { operation, inputs }
+        method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/" + task + "/runs",
+        headers: { "Content-Type": "application/json" }, data: { inputs }
       });
       expect(response.status).to.equal(202);
       expect(response.data.status).to.equal("waiting");
-      await checkWorkflow(response.data.id, operation, normalized, result);
+      await checkRun(response.data.id, task, inputs, result);
     });
   }
 }

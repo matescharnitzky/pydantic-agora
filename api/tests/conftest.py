@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from unittest.mock import Mock
 
 import logfire
 import pytest
@@ -16,9 +17,23 @@ def local_tracing(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def app() -> Iterator[FastAPI]:
+    from agora_api.api.deps import get_database_connection
     from agora_api.main import app
 
     app.dependency_overrides.clear()
+    connection = Mock()
+    connection.execute.return_value.fetchone.return_value = (
+        [
+            {
+                "id": name,
+                "description": "Test task",
+                "input_schema": {},
+                "output_schema": {},
+            }
+            for name in ["dummy"]
+        ],
+    )
+    app.dependency_overrides[get_database_connection] = lambda: connection
     try:
         yield app
     finally:

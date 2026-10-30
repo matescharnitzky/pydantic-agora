@@ -1,0 +1,19 @@
+meta {
+  name: Reject an unregistered task
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/tasks/unregistered/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{}}
+}
+
+assert {
+  res.status: eq 404
+}

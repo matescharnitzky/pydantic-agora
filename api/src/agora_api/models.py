@@ -1,54 +1,24 @@
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 
-class ContractModel(BaseModel):
+class RunInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-
-class Numbers(ContractModel):
-    left: int = Field(ge=-1_000_000, le=1_000_000)
-    right: int = Field(ge=-1_000_000, le=1_000_000)
+    inputs: dict[str, JsonValue]
 
 
-class ScaleInputs(Numbers):
-    double_positive: bool = False
+class TaskRequest(RunInput):
+    task: str = Field(min_length=1)
 
 
-class DivideInputs(Numbers):
-    divisor: int = Field(ge=-1_000_000, le=1_000_000)
-
-
-class ScaleRequest(ContractModel):
-    operation: Literal["add_then_scale"]
-    inputs: ScaleInputs
-
-
-class DivideRequest(ContractModel):
-    operation: Literal["divide_sum"]
-    inputs: DivideInputs
-
-
-class WaitInputs(ContractModel):
-    seconds: float = Field(ge=0.0, le=5.0)
-
-
-class WaitRequest(ContractModel):
-    operation: Literal["wait_then_add"]
-    inputs: WaitInputs
-
-
-WorkflowRequest = Annotated[
-    ScaleRequest | DivideRequest | WaitRequest, Field(discriminator="operation")
-]
-request_adapter = TypeAdapter(WorkflowRequest)
-
-
-class WorkflowResult(ContractModel):
-    value: float
-    branch: Literal["unchanged", "doubled", "divided"]
+class Task(BaseModel):
+    id: str
+    description: str
+    input_schema: dict[str, JsonValue]
+    output_schema: dict[str, JsonValue]
 
 
 class Health(BaseModel):
@@ -56,23 +26,23 @@ class Health(BaseModel):
     service: Literal["api"] = "api"
 
 
-class WorkflowStatus(StrEnum):
+class RunStatus(StrEnum):
     WAITING = "waiting"
     RUNNING = "running"
     SUCCESSFUL = "successful"
     FAILED = "failed"
 
 
-class WorkflowSubmission(BaseModel):
+class RunSubmission(BaseModel):
     id: str
-    status: WorkflowStatus = WorkflowStatus.WAITING
+    status: RunStatus = RunStatus.WAITING
 
 
-class Workflow(BaseModel):
+class Run(BaseModel):
     id: str
-    status: WorkflowStatus
-    request: WorkflowRequest
-    result: WorkflowResult | None = None
+    status: RunStatus
+    request: TaskRequest
+    result: dict[str, JsonValue] | None = None
     error: str | None = None
     created_at: int | None = None
     updated_at: int | None = None

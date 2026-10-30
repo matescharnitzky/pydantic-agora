@@ -1,50 +1,8 @@
-from typing import Annotated, Literal
-
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 
-class ContractModel(BaseModel):
+class TaskRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-
-class Numbers(ContractModel):
-    left: int = Field(ge=-1_000_000, le=1_000_000)
-    right: int = Field(ge=-1_000_000, le=1_000_000)
-
-
-class ScaleInputs(Numbers):
-    double_positive: bool = False
-
-
-class DivideInputs(Numbers):
-    divisor: int = Field(ge=-1_000_000, le=1_000_000)
-
-
-class ScaleRequest(ContractModel):
-    operation: Literal["add_then_scale"]
-    inputs: ScaleInputs
-
-
-class DivideRequest(ContractModel):
-    operation: Literal["divide_sum"]
-    inputs: DivideInputs
-
-
-class WaitInputs(ContractModel):
-    seconds: float = Field(ge=0.0, le=5.0)
-
-
-class WaitRequest(ContractModel):
-    operation: Literal["wait_then_add"]
-    inputs: WaitInputs
-
-
-WorkflowRequest = Annotated[
-    ScaleRequest | DivideRequest | WaitRequest, Field(discriminator="operation")
-]
-request_adapter = TypeAdapter(WorkflowRequest)
-
-
-class WorkflowResult(ContractModel):
-    value: float
-    branch: Literal["unchanged", "doubled", "divided"]
+    task: str = Field(min_length=1)
+    inputs: dict[str, JsonValue]

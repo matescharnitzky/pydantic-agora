@@ -6,7 +6,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:bruno": "cd bruno && bru run --env local",
+    "test:bruno": "cd bruno && bru run --env local --exclude-tags live-model",
+    "test:bruno:live": "cd bruno && bru run --env local --tags live-model",
     "test:playwright": "playwright test"
   },
   "devDependencies": {

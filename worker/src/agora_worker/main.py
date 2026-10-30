@@ -4,10 +4,12 @@ from threading import Event
 from types import FrameType
 
 import logfire
-from dbos import DBOS, DBOSConfig, DBOSPortableJSONSerializer
+from dbos import DBOS, DBOSConfig
 
 from agora_worker import workflows
 from agora_worker.config import Settings
+from agora_worker.tasks import TASK_REGISTRY
+from agora_worker.tasks.utils import register_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -32,16 +34,17 @@ def main() -> int:
         inspect_arguments=False,
         data_dir="/tmp/agora-logfire-worker",
     )
+    logfire.instrument_pydantic_ai(include_content=False, include_binary_content=False)
     config: DBOSConfig = {
         "name": "agora-worker",
         "system_database_url": settings.dbos_database_url,
         "run_admin_server": False,
         "enable_otlp": True,
-        "serializer": DBOSPortableJSONSerializer(),
     }
     DBOS(config=config)
     try:
         DBOS.launch()
+        register_tasks(TASK_REGISTRY, str(settings.database_url))
         DBOS.register_queue(workflows.QUEUE_NAME, worker_concurrency=4)
         logger.info("Agora worker started; durable workflow enabled")
         stopped.wait()
