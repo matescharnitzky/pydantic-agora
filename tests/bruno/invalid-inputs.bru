@@ -39,7 +39,10 @@ tests {
     ["out-of-range integer", "dummy", { left: 1000001, right: 2 }],
     ["empty prompt", "generate", { prompt: "" }],
     ["invalid file", "parse", { files: [{ kind: "inline", media_type: "application/pdf", data: "@@@" }] }],
-    ["empty parsing files", "parse", { files: [] }]
+    ["empty parsing files", "parse", { files: [] }],
+    ["unsupported decision type", "decide", { text: "Hello", questions: { summary: { type: "string" } } }],
+    ["duplicate choices", "decide", { text: "Hello", questions: { category: { type: "choice", options: ["same", "same"] } } }],
+    ["empty decisions", "decide", { text: "Hello", questions: {} }]
   ]) {
     test("worker rejects " + name, async function () {
       const response = await bru.sendRequest({
