@@ -1,0 +1,47 @@
+meta {
+  name: Parse a PDF and image into text
+  type: http
+  seq: 10
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/tasks/parse/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs": {"files": [{"kind": "inline", "media_type": "application/pdf", "data": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggNDAgPj4Kc3RyZWFtCkJUIC9GMSAyMCBUZiAyMCAxMDAgVGQgKEFHT1JBLVBERikgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDEgMDAwMDAgbiAKMDAwMDAwMDMxMSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjQwMQolJUVPRg=="}, {"kind": "inline", "media_type": "image/png", "data": "iVBORw0KGgoAAAANSUhEUgAAAtAAAACCCAAAAABK5aCVAAAF3UlEQVR4nO2S2ZHFMBACX/5J7yagGkGBDo/oX0t2g/n9hdCI32mBEJxk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1Zk0KEVGXRoRQYdWpFBh1bAg/6V3HS3vrHDmQd1HhnwiXgDxd6dd+ICH9waWLnrqUi5y4M6jwz4RLyBYu/OO3GBD24NrNz1VKTc5UGdRwZ8It5AsXfnnbjAB7cGVu56KlLu8qDOIwM+EW+g2LvzTlzgg1sDK3c9FSl3eVDnkQGfiDdQ7N15Jy7wwa2BlbueipS7PKjzyIBPxBso9u68Exf44NbAyl1PRcpdHtR5ZMAn4g0Ue3feiQt8cGtg5a6nIuUuD+o8MuAT8QaKvTvvxAU+uDWwctdTkXKXB3UeGfCJeAPF3p134gIf3BpYueupSLnLgzqPDPhEvIFi7847cUFV+XOv3XXDu9SJbupqXX8ZtO2uG96lTnRTV+v6y6Btd93wLnWim7pa118GbbvrhnepE93U1br+MmjbXTe8S53opq7W9ZdB2+664V3qRDd1ta6/DNp21w3vUie6qat1/WXQtrtueJc60U1dresvg7bddcO71Ilu6mpdfxm07a4b3qVOdFNX6/q7YNCnvuu+68ad46ZRrusvg7bddePOcaor9H0eMmjbXTfuHKe6Qt/nIYO23XXjznGqK/R9HjJo21037hynukLf5yGDtt11485xqiv0fR4yaNtdN+4cp7pC3+chg7bddePOcaor9H0eMmjbXTfuHKe6Qt/nIYO23XXjznGqK/R9HuAgKLW0crf2453X5VUM3B14uvK8j/9unXzYBlrWqcCoH++8Lq9i4O7A05Xnffx36+TDNtCyTgVG/XjndXkVA3cHnq487+O/WycftoGWdSow6sc7r8urGLg78HTleR//3Tr5sA20rFOBUT/eeV1excDdgacrz/v479bJh22gZZ0KjPrxzuvyKgbuDjxded7Hf7dOPmwDLetUYNSPd16XVzFwd+DpyvM+/rt18mEbaFmnAqN+vPO6vIqBuwNPV5738d+tkw/bQMs6FRj1453X5VUM3B14uvK8j/9unXzYBlrWqcCoH++8Lq9i4O7A05Xnffx36+TDNviy0HM33VXep5xT2OF8+12eR8raMQ43O5xvv8vzSFk7xuFmh/Ptd3keKWvHONzscL79Ls8jZe0Yh5sdzrff5XmkrB3jcLPD+fa7PI+UtWMcbnY4336X55GydozDzQ7n2+/yPFLWjnG42eF8+12eR8raMQ43O5xvv8vzXFnKU/6cgtvlO/9I4bmylKf8OQW3y3f+kcJzZSlP+XMKbpfv/COF58pSnvLnFNwu3/lHCs+VpTzlzym4Xb7zjxSeK0t5yp9TcLt85x8pPFeW8pQ/p+B2+c4/UniuLOUpf07B7fKdf6TwXFnKU/6cgtvlO/9I4bmylKf8OQW3y3f+kcLCskZPR6BvRu+e+kkKdco6+fm8qKkn78RUCYKeU1SVsnhnT16eOmWd/Hxe1NSTd2KqBEHPKapKWbyzJy9PnbJOfj4vaurJOzFVgqDnFFWlLN7Zk5enTlknP58XNfXknZgqQdBziqpSFu/syctTp6yTn8+LmnryTkyVIOg5RVUpi3f25OWpU9bJz+dFTT15J6ZKEPScoqqUxTt78vLUKevk5/Oipp68E1MlCHpOUVXK4p09eXnqlHXy83lRU0/eiakSBD2nqCpl8c6evDx1yjr5+byoqSfvxFQJgp5TVJWyeGdPXp46ZZ38fF7U1JN3YooeDOELZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFRl0aEUGHVqRQYdWZNChFf95EwEy+gj1JwAAAABJRU5ErkJggg=="}]}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("PDF and image text is extracted and persisted", async function () {
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result.text).to.include("AGORA-PDF");
+    expect(run.result.text).to.include("AGORA-IMAGE");
+    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
+    expect(saved.data.result).to.deep.equal(run.result);
+  });
+
+  test("a blank image produces a successful empty transcription", async function () {
+    const response = await bru.sendRequest({
+      method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/parse/runs",
+      headers: { "Content-Type": "application/json" },
+      data: { inputs: { files: [{ kind: "inline", media_type: "image/png", data: "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAXklEQVR4nO3PMQ0AMAzAsPInvYLYYVWKESTzjhsd8KsBrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BrQGtAa0BbQHKU9LC7/CP1AAAAABJRU5ErkJggg==" }] } }
+    });
+    expect(response.status).to.equal(202);
+    const run = await waitForRun(bru, response.data.id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result).to.deep.equal({ text: "" });
+  });
+
+}

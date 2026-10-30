@@ -26,6 +26,7 @@ def test_plain_text_generation() -> None:
         {"prompt": 1},
         {"prompt": "Hi", "output_schema": {}},
         {"prompt": "Hi", "model": "another-model"},
+        {"prompt": "Hi", "files": []},
     ],
 )
 def test_invalid_generation_inputs_fail_before_model_execution(inputs: dict[str, object]) -> None:

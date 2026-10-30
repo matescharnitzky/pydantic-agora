@@ -32,9 +32,10 @@ def main() -> int:
         send_to_logfire=bool(logfire_token),
         console=False,
         inspect_arguments=False,
+        scrubbing=False,
         data_dir="/tmp/agora-logfire-worker",
     )
-    logfire.instrument_pydantic_ai(include_content=False, include_binary_content=False)
+    logfire.instrument_pydantic_ai(include_content=True, include_binary_content=True)
     config: DBOSConfig = {
         "name": "agora-worker",
         "system_database_url": settings.dbos_database_url,
