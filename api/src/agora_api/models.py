@@ -19,7 +19,6 @@ class Task(BaseModel):
     description: str
     input_schema: dict[str, JsonValue]
     output_schema: dict[str, JsonValue]
-    credentials: list[str]
 
 
 class Health(BaseModel):

@@ -3,6 +3,7 @@ from pydantic_ai import Agent
 from pydantic_ai.durable_exec.dbos import DBOSDurability
 
 from agora_worker.models import ContractModel
+from agora_worker.tasks.base import Task
 
 
 class GenerationInput(ContractModel):
@@ -26,11 +27,19 @@ agent = Agent[GenerationInput, str](
 )
 
 
-def generate(inputs: GenerationInput) -> GenerationOutput:
-    result = agent.run_sync(
-        inputs.prompt,
-        instructions=inputs.instructions,
-        model=f"openai-responses:{inputs.model}",
-        deps=inputs,
-    )
-    return GenerationOutput(output=result.output, model=result.response.model_name or inputs.model)
+class GenerationTask(Task[GenerationInput, GenerationOutput]):
+    id = "generate"
+    description = "Generate text with an OpenAI model."
+    input_model = GenerationInput
+    output_model = GenerationOutput
+
+    def run(self, inputs: GenerationInput) -> GenerationOutput:
+        result = agent.run_sync(
+            inputs.prompt,
+            instructions=inputs.instructions,
+            model=f"openai-responses:{inputs.model}",
+            deps=inputs,
+        )
+        return GenerationOutput(
+            output=result.output, model=result.response.model_name or inputs.model
+        )

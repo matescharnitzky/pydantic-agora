@@ -6,7 +6,8 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from agora_worker.config import Settings
-from agora_worker.tasks.registry import Task, register_tasks
+from agora_worker.tasks.base import Task
+from agora_worker.tasks.registry import register_tasks
 
 
 class Inputs(BaseModel):
@@ -17,28 +18,25 @@ class Result(BaseModel):
     length: int
 
 
-def length(inputs: Inputs) -> Result:
-    return Result(length=len(inputs.text))
+class LengthTask(Task[Inputs, Result]):
+    id = "length"
+    description = "Count characters"
+    input_model = Inputs
+    output_model = Result
 
-
-task = Task(
-    id="length",
-    function=length,
-    input_model=Inputs,
-    output_model=Result,
-    description="Count characters",
-)
+    def run(self, inputs: Inputs) -> Result:
+        return Result(length=len(inputs.text))
 
 
 def test_task_validates_inputs_and_calls_function() -> None:
-    assert task.call({"text": "abc"}) == {"length": 3}
+    assert LengthTask().call({"text": "abc"}) == {"length": 3}
     with pytest.raises(ValidationError):
-        task.call({"text": 1})
+        LengthTask().call({"text": 1})
 
 
 def test_duplicate_tasks_are_rejected_before_database_access() -> None:
     with pytest.raises(ValueError, match="Duplicate task"):
-        register_tasks([task, task], "not-a-database-url")
+        register_tasks([LengthTask, LengthTask], "not-a-database-url")
 
 
 @pytest.mark.integration
@@ -48,13 +46,13 @@ def test_registration_publishes_schemas_and_replaces_previous_catalog() -> None:
     database_url = str(Settings().database_url)
     application = f"registry-test-{uuid4()}"
     try:
-        register_tasks([task], database_url, application=application)
+        register_tasks([LengthTask], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(
                 "SELECT tasks FROM agora.task_registry WHERE application = %s",
                 (application,),
             ).fetchone()
-            assert row == ([task.metadata()],)
+            assert row == ([LengthTask().metadata()],)
         register_tasks([], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(

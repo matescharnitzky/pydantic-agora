@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from pydantic_ai.models import test
 
-from agora_worker.tasks.generation.task import GenerationInput, agent, generate
+from agora_worker.tasks.generation.task import GenerationInput, GenerationTask, agent
 
 
 @pytest.fixture(autouse=True)
@@ -12,7 +12,9 @@ def prevent_live_model_calls(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_plain_text_generation() -> None:
     with agent.override(model=test.TestModel(custom_output_text="Hello")):
-        result = generate(GenerationInput(prompt="Say hello", instructions="Be concise"))
+        result = GenerationTask().run(
+            GenerationInput(prompt="Say hello", instructions="Be concise")
+        )
     assert result.output == "Hello"
     assert result.model
 

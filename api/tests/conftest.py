@@ -29,7 +29,6 @@ def app() -> Iterator[FastAPI]:
                 "description": "Test task",
                 "input_schema": {},
                 "output_schema": {},
-                "credentials": [],
             }
             for name in ["add_then_scale", "divide_sum"]
         ],

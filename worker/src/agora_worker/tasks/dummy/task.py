@@ -5,6 +5,7 @@ from dbos import DBOS
 from pydantic import Field
 
 from agora_worker.models import ContractModel
+from agora_worker.tasks.base import Task
 
 
 class Numbers(ContractModel):
@@ -49,19 +50,37 @@ def wait(seconds: float) -> None:
     sleep(seconds)
 
 
-def add_then_scale(inputs: ScaleInput) -> DummyOutput:
-    total = add(inputs.left, inputs.right)
-    if inputs.double_positive and total > 0:
-        return DummyOutput(value=float(double(total)), branch="doubled")
-    return DummyOutput(value=float(total), branch="unchanged")
+class AddThenScaleTask(Task[ScaleInput, DummyOutput]):
+    id = "add_then_scale"
+    description = "Add two numbers and optionally double a positive total."
+    input_model = ScaleInput
+    output_model = DummyOutput
+
+    def run(self, inputs: ScaleInput) -> DummyOutput:
+        total = add(inputs.left, inputs.right)
+        if inputs.double_positive and total > 0:
+            return DummyOutput(value=float(double(total)), branch="doubled")
+        return DummyOutput(value=float(total), branch="unchanged")
 
 
-def divide_sum(inputs: DivideInput) -> DummyOutput:
-    return DummyOutput(
-        value=divide(add(inputs.left, inputs.right), inputs.divisor), branch="divided"
-    )
+class DivideSumTask(Task[DivideInput, DummyOutput]):
+    id = "divide_sum"
+    description = "Add two numbers and divide their sum."
+    input_model = DivideInput
+    output_model = DummyOutput
+
+    def run(self, inputs: DivideInput) -> DummyOutput:
+        return DummyOutput(
+            value=divide(add(inputs.left, inputs.right), inputs.divisor), branch="divided"
+        )
 
 
-def wait_then_add(inputs: WaitInput) -> DummyOutput:
-    wait(inputs.seconds)
-    return DummyOutput(value=float(add(2, 3)), branch="unchanged")
+class WaitThenAddTask(Task[WaitInput, DummyOutput]):
+    id = "wait_then_add"
+    description = "Wait before adding two fixed numbers; used to verify recovery."
+    input_model = WaitInput
+    output_model = DummyOutput
+
+    def run(self, inputs: WaitInput) -> DummyOutput:
+        wait(inputs.seconds)
+        return DummyOutput(value=float(add(2, 3)), branch="unchanged")

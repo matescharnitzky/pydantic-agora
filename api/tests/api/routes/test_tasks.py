@@ -26,7 +26,6 @@ def registry(app: FastAPI) -> Mock:
                     "additionalProperties": False,
                 },
                 "output_schema": {"type": "object"},
-                "credentials": [],
             }
         ],
     )
