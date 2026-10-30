@@ -63,7 +63,7 @@ class ParsingTask(Task[ParsingInput, ParsingOutput]):
 
     agent: ClassVar[Agent[ParsingInput, str]] = Agent(
         "openai-responses:gpt-5-mini",
-        name="agora_parse_v1",
+        name="parse",
         deps_type=ParsingInput,
         output_type=str,
         instructions=(

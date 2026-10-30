@@ -28,7 +28,7 @@ class GenerationTask(Task[GenerationInput, GenerationOutput]):
 
     agent: ClassVar[Agent[GenerationInput, str]] = Agent(
         "openai-responses:gpt-5-mini",
-        name="agora_generate_v1",
+        name="generate",
         deps_type=GenerationInput,
         output_type=str,
         defer_model_check=True,
