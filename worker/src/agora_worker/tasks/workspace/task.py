@@ -29,7 +29,7 @@ class WorkspaceTask(Task[WorkspaceInput, WorkspaceOutput]):
 
     agent: ClassVar[Agent[WorkspaceInput, str]] = Agent(
         "openai-responses:gpt-5-mini",
-        name="agora_workspace_v1",
+        name="workspace",
         deps_type=WorkspaceInput,
         output_type=str,
         instructions="Use the workspace tools to answer. Cite file paths in your answer.",
