@@ -37,7 +37,8 @@ tests {
     ["boolean integer", "dummy", { left: true, right: 2 }],
     ["out-of-range wait", "dummy", { seconds: 6 }],
     ["out-of-range integer", "dummy", { left: 1000001, right: 2 }],
-    ["empty prompt", "generate", { prompt: "" }]
+    ["empty prompt", "generate", { prompt: "" }],
+    ["invalid file", "generate", { prompt: "Read", files: [{ kind: "inline", media_type: "application/pdf", data: "@@@" }] }]
   ]) {
     test("worker rejects " + name, async function () {
       const response = await bru.sendRequest({
