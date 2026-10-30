@@ -17,4 +17,4 @@ def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     task = task_type()
     inputs = task.input_model.model_validate(request.inputs)
     output = task.run(inputs)
-    return task.output_model.model_validate(output).model_dump(mode="json")
+    return output.model_dump(mode="json")
