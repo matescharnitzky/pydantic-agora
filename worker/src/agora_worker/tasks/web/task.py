@@ -42,7 +42,7 @@ class WebTask(Task[WebInput, WebOutput]):
 
     agent: ClassVar[Agent[WebInput, str]] = Agent(
         "openai-responses:gpt-5-mini",
-        name="agora_web_v1",
+        name="web",
         deps_type=WebInput,
         output_type=str,
         instructions="Use web search for current information and web_fetch to read specific pages. "
