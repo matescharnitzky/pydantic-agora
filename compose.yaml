@@ -72,6 +72,8 @@ services:
     networks: [frontend, backend]
 
   worker:
+    volumes:
+      - ./tests/fixtures/workspace:/workspace:ro
     build:
       context: .
       dockerfile: worker/Dockerfile

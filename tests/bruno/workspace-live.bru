@@ -1,0 +1,32 @@
+meta {
+  name: Read files with an agent
+  type: http
+  seq: 10
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/tasks/workspace/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"prompt":"Read handbook.txt using the file tool. What is the project codename? Include the filename in your answer."}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("real agent reads a mounted file", async function () {
+    const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
+    expect(run.status).to.equal("successful");
+    expect(run.result.output).to.include("Copper Finch");
+    expect(run.result.files_requested.some(path => path.endsWith("handbook.txt"))).to.equal(true);
+  });
+}
