@@ -1,20 +1,23 @@
 from typing import ClassVar
 
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_ai import Agent
 from pydantic_ai.durable_exec.dbos import DBOSDurability
 
-from agora_worker.models import ContractModel
 from agora_worker.tasks.base import Task
 
 
-class GenerationInput(ContractModel):
+class GenerationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     prompt: str = Field(min_length=1)
     instructions: str = ""
     model: str = Field(default="gpt-5-mini", min_length=1)
 
 
-class GenerationOutput(ContractModel):
+class GenerationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     output: str
     model: str
 
