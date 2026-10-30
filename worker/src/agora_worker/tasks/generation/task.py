@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from pydantic import Field
 from pydantic_ai import Agent
 from pydantic_ai.durable_exec.dbos import DBOSDurability
@@ -17,24 +19,23 @@ class GenerationOutput(ContractModel):
     model: str
 
 
-agent = Agent[GenerationInput, str](
-    "openai-responses:gpt-5-mini",
-    name="agora_generate_v1",
-    deps_type=GenerationInput,
-    output_type=str,
-    defer_model_check=True,
-    capabilities=[DBOSDurability()],
-)
-
-
 class GenerationTask(Task[GenerationInput, GenerationOutput]):
     id = "generate"
     description = "Generate text with an OpenAI model."
     input_model = GenerationInput
     output_model = GenerationOutput
 
+    agent: ClassVar[Agent[GenerationInput, str]] = Agent(
+        "openai-responses:gpt-5-mini",
+        name="agora_generate_v1",
+        deps_type=GenerationInput,
+        output_type=str,
+        defer_model_check=True,
+        capabilities=[DBOSDurability()],
+    )
+
     def run(self, inputs: GenerationInput) -> GenerationOutput:
-        result = agent.run_sync(
+        result = self.agent.run_sync(
             inputs.prompt,
             instructions=inputs.instructions,
             model=f"openai-responses:{inputs.model}",
