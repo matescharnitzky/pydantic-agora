@@ -1,5 +1,5 @@
 meta {
-  name: Generate text and caller-schema outputs with OpenAI
+  name: Generate text with OpenAI
   type: http
   seq: 9
   tags: [
@@ -41,23 +41,6 @@ tests {
     const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/workflows/" + workflow.id });
     expect(saved.data).to.deep.equal(workflow);
   });
-
-  for (const [name, prompt, output_schema, expected] of [
-    ["extraction", "Extract the name from: Ada Lovelace.", { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false }, { name: "Ada Lovelace" }],
-    ["classification", "Classify: Please refund my order.", { type: "object", properties: { category: { enum: ["refund", "other"] } }, required: ["category"], additionalProperties: false }, { category: "refund" }]
-  ]) {
-    test("caller-supplied schema supports " + name, async function () {
-      const response = await bru.sendRequest({
-        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" },
-        data: { operation: "generate", inputs: { prompt, output_schema } }
-      });
-      expect(response.status).to.equal(202);
-      const workflow = await finished(response.data.id);
-      expect(workflow.status).to.equal("successful");
-      expect(workflow.result.output).to.deep.equal(expected);
-    });
-  }
 
   test("upstream failures remain retrievable without raw provider errors", async function () {
     const response = await bru.sendRequest({

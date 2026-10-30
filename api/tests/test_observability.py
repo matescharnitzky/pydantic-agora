@@ -30,11 +30,11 @@ def test_request_bodies_and_credentials_are_not_recorded(
             "inputs": {"left": 1, "right": 2, "credential": body_marker},
         },
     )
-    assert response.status_code == 422
-    client.enqueue.assert_not_called()
+    assert response.status_code == 202
+    client.enqueue.assert_called_once()
     assert secret not in response.text
     spans = capfire.exporter.exported_spans_as_dict()
-    assert any(span["attributes"].get("http.status_code") == 422 for span in spans)
+    assert any(span["attributes"].get("http.status_code") == 202 for span in spans)
     assert secret not in str(spans)
     assert body_marker not in str(spans)
 

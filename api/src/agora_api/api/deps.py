@@ -29,16 +29,16 @@ def get_workflow_client() -> Iterator[DBOSClient]:
 WorkflowClient = Annotated[DBOSClient, Depends(get_workflow_client)]
 
 
-def get_registry_connection() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
+def get_database_connection() -> Iterator[psycopg.Connection[tuple[object, ...]]]:
     try:
         with psycopg.connect(
             str(settings.database_url), connect_timeout=2, options="-c statement_timeout=2000"
         ) as connection:
             yield connection
     except psycopg.Error:
-        raise HTTPException(status_code=503, detail="Capability registry unavailable") from None
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
 
 
-RegistryConnection = Annotated[
-    psycopg.Connection[tuple[object, ...]], Depends(get_registry_connection)
+DatabaseConnection = Annotated[
+    psycopg.Connection[tuple[object, ...]], Depends(get_database_connection)
 ]

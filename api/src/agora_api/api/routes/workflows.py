@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response
 
-from agora_api.api.deps import RegistryConnection, WorkflowClient
+from agora_api.api.deps import DatabaseConnection, WorkflowClient
 from agora_api.models import Workflow, WorkflowRequest, WorkflowSubmission
 from agora_api.services import capabilities, workflows
 
@@ -14,10 +14,13 @@ def submit_workflow(
     request: WorkflowRequest,
     response: Response,
     client: WorkflowClient,
-    connection: RegistryConnection,
+    connection: DatabaseConnection,
 ) -> WorkflowSubmission:
+    """Submit a registered operation; its inputs are validated by the worker."""
     try:
-        capabilities.validate_request(request, capabilities.list_capabilities(connection))
+        capabilities.validate_operation(
+            request.operation, capabilities.list_capabilities(connection)
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     workflow_id = workflows.submit_workflow(client, request)

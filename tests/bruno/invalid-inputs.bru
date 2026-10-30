@@ -1,5 +1,5 @@
 meta {
-  name: Reject invalid operation inputs
+  name: Worker rejects invalid capability inputs
   type: http
   seq: 6
 }
@@ -15,23 +15,45 @@ body:json {
 }
 
 assert {
-  res.status: eq 422
+  res.status: eq 202
 }
 
 tests {
+  async function checkFailed(id) {
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const response = await bru.sendRequest({
+        method: "GET", url: bru.getEnvVar("baseUrl") + "/workflows/" + id
+      });
+      expect(response.status).to.equal(200);
+      if (["successful", "failed"].includes(response.data.status)) {
+        expect(response.data.status).to.equal("failed");
+        expect(response.data.result).to.equal(null);
+        expect(response.data.error).to.equal("Workflow failed");
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    throw new Error("Worker did not reject invalid inputs within 20 seconds");
+  }
+
+  test("invalid inputs are reported as a failed workflow", async function () {
+    await checkFailed(res.getBody().id);
+  });
+
   for (const [name, operation, inputs] of [
     ["numeric string", "add_then_scale", { left: "1", right: 2 }],
     ["boolean integer", "add_then_scale", { left: true, right: 2 }],
     ["missing divisor", "divide_sum", { left: 1, right: 2 }],
-    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }]
+    ["out-of-range integer", "add_then_scale", { left: 1000001, right: 2 }],
+    ["empty prompt", "generate", { prompt: "" }]
   ]) {
-    test("reject " + name, async function () {
-      await bru.sendRequest({
+    test("worker rejects " + name, async function () {
+      const response = await bru.sendRequest({
         method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
         headers: { "Content-Type": "application/json" }, data: { operation, inputs }
-      }, (error, response) => {
-        expect(error ? error.status : response.status).to.equal(422);
       });
+      expect(response.status).to.equal(202);
+      await checkFailed(response.data.id);
     });
   }
 }

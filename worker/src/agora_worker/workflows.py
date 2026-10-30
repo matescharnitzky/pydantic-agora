@@ -3,7 +3,7 @@ from time import sleep
 from dbos import DBOS, WorkflowSerializationFormat
 from pydantic import JsonValue
 
-from agora_worker.generation import generate, generation_input_schema
+from agora_worker.generation import generate
 from agora_worker.models import (
     DivideInputs,
     GenerationInputs,
@@ -13,7 +13,7 @@ from agora_worker.models import (
     WorkflowRequest,
     WorkflowResult,
 )
-from agora_worker.registry import Registry
+from agora_worker.registry import Capability
 
 QUEUE_NAME = "agora-workflows-v1"
 WORKFLOW_NAME = "agora.execute.v1"
@@ -57,46 +57,43 @@ def wait_then_add(inputs: WaitInputs) -> WorkflowResult:
     return WorkflowResult(value=float(add(2, 3)), branch="unchanged")
 
 
-registry = Registry()
-registry.register(
-    "generate",
-    GenerationInputs,
-    GenerationResult,
-    generate,
-    description="Generate text or JSON matching a caller-supplied schema.",
-    input_schema=generation_input_schema(),
-    credentials=["OPENAI_API_KEY (worker)"],
-    constraints=[
-        "OpenAI Responses models only",
-        "Inline JSON Schema draft 2020-12 schemas; references are not supported",
-        "Provider-specific schema/model restrictions may cause execution to fail",
-        "Local/private execution; no application cancellation or call-budget policy",
-    ],
-)
-registry.register(
-    "add_then_scale",
-    ScaleInputs,
-    WorkflowResult,
-    add_then_scale,
-    description="Add two numbers and optionally double a positive total.",
-)
-registry.register(
-    "divide_sum",
-    DivideInputs,
-    WorkflowResult,
-    divide_sum,
-    description="Add two numbers and divide their sum.",
-)
-registry.register(
-    "wait_then_add",
-    WaitInputs,
-    WorkflowResult,
-    wait_then_add,
-    description="Wait before adding two fixed numbers; used to verify recovery.",
-)
+REGISTRY: list[Capability] = [
+    Capability(
+        id="generate",
+        function=generate,
+        input_model=GenerationInputs,
+        output_model=GenerationResult,
+        description="Generate text with an OpenAI model.",
+        credentials=["OPENAI_API_KEY (worker)"],
+    ),
+    Capability(
+        id="add_then_scale",
+        function=add_then_scale,
+        input_model=ScaleInputs,
+        output_model=WorkflowResult,
+        description="Add two numbers and optionally double a positive total.",
+    ),
+    Capability(
+        id="divide_sum",
+        function=divide_sum,
+        input_model=DivideInputs,
+        output_model=WorkflowResult,
+        description="Add two numbers and divide their sum.",
+    ),
+    Capability(
+        id="wait_then_add",
+        function=wait_then_add,
+        input_model=WaitInputs,
+        output_model=WorkflowResult,
+        description="Wait before adding two fixed numbers; used to verify recovery.",
+    ),
+]
 
 
 @DBOS.workflow(name=WORKFLOW_NAME, serialization_type=WorkflowSerializationFormat.PORTABLE)
 def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     request = WorkflowRequest.model_validate(payload)
-    return registry.execute(request.operation, request.inputs)
+    capability = next((item for item in REGISTRY if item.id == request.operation), None)
+    if capability is None:
+        raise ValueError(f"Unknown operation: {request.operation}")
+    return capability.call(request.inputs)

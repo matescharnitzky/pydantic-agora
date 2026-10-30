@@ -17,36 +17,24 @@ def local_tracing(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def app() -> Iterator[FastAPI]:
-    from agora_api.api.deps import get_registry_connection
+    from agora_api.api.deps import get_database_connection
     from agora_api.main import app
 
     app.dependency_overrides.clear()
     connection = Mock()
-    numbers = {
-        "type": "object",
-        "properties": {
-            "left": {"type": "integer", "minimum": -1_000_000, "maximum": 1_000_000},
-            "right": {"type": "integer", "minimum": -1_000_000, "maximum": 1_000_000},
-            "double_positive": {"type": "boolean"},
-            "divisor": {"type": "integer"},
-        },
-        "required": ["left", "right"],
-        "additionalProperties": False,
-    }
     connection.execute.return_value.fetchone.return_value = (
         [
             {
                 "id": name,
                 "description": "Test operation",
-                "input_schema": numbers,
+                "input_schema": {},
                 "output_schema": {},
                 "credentials": [],
-                "constraints": [],
             }
             for name in ["add_then_scale", "divide_sum"]
         ],
     )
-    app.dependency_overrides[get_registry_connection] = lambda: connection
+    app.dependency_overrides[get_database_connection] = lambda: connection
     try:
         yield app
     finally:

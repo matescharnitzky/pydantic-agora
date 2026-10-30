@@ -15,19 +15,11 @@ assert {
 }
 
 tests {
-  test("discovery exposes schemas and worker credential prerequisites", function () {
-    const capability = res.getBody()[0];
-    expect(capability.input_schema.properties).to.have.property("output_schema");
+  test("discovery exposes Pydantic schemas and worker credentials", function () {
+    const capability = res.getBody().find(item => item.id === "generate");
+    expect(capability.input_schema.properties).to.have.property("prompt");
+    expect(capability.input_schema.properties).not.to.have.property("output_schema");
+    expect(capability.output_schema.properties.output.type).to.equal("string");
     expect(capability.credentials).to.deep.equal(["OPENAI_API_KEY (worker)"]);
-  });
-
-  test("invalid output schemas are rejected", async function () {
-    await bru.sendRequest({
-      method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-      headers: { "Content-Type": "application/json" },
-      data: { operation: "generate", inputs: { prompt: "Generate", output_schema: { type: "imaginary" } } }
-    }, (error, response) => {
-      expect(error ? error.status : response.status).to.equal(422);
-    });
   });
 }

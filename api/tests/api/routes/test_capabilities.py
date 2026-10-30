@@ -7,7 +7,7 @@ from dbos import DBOSClient, WorkflowStatus
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from agora_api.api.deps import get_registry_connection, get_workflow_client
+from agora_api.api.deps import get_database_connection, get_workflow_client
 from agora_api.services.workflows import APPLICATION_NAME, WORKFLOW_NAME, get_workflow
 
 
@@ -27,11 +27,10 @@ def registry(app: FastAPI) -> Mock:
                 },
                 "output_schema": {"type": "object"},
                 "credentials": [],
-                "constraints": [],
             }
         ],
     )
-    app.dependency_overrides[get_registry_connection] = lambda: connection
+    app.dependency_overrides[get_database_connection] = lambda: connection
     return connection
 
 
@@ -50,21 +49,17 @@ def test_new_worker_operation_is_enqueued_without_api_changes(app: FastAPI, regi
     assert client.enqueue.call_args.args[1] == payload
 
 
-@pytest.mark.parametrize("inputs", [{}, {"text": ""}, {"text": 1}, {"text": "hi", "extra": True}])
-def test_published_schema_is_checked_before_enqueue(
-    app: FastAPI, registry: Mock, inputs: dict[str, object]
-) -> None:
+def test_capability_inputs_are_left_for_worker_validation(app: FastAPI, registry: Mock) -> None:
     client = Mock(spec=DBOSClient)
     app.dependency_overrides[get_workflow_client] = lambda: client
-    response = TestClient(app).post(
-        "/workflows", json={"operation": "new-worker-operation", "inputs": inputs}
-    )
-    assert response.status_code == 422
-    client.enqueue.assert_not_called()
+    payload = {"operation": "new-worker-operation", "inputs": {"text": 1}}
+    response = TestClient(app).post("/workflows", json=payload)
+    assert response.status_code == 202
+    assert client.enqueue.call_args.args[1] == payload
 
 
 def test_registry_failure_is_sanitized(app: FastAPI, monkeypatch: pytest.MonkeyPatch) -> None:
-    app.dependency_overrides.pop(get_registry_connection)
+    app.dependency_overrides.pop(get_database_connection)
     monkeypatch.setattr(
         "agora_api.api.deps.psycopg.connect",
         Mock(side_effect=psycopg.OperationalError("secret connection")),
@@ -78,14 +73,14 @@ def test_missing_registry_is_unavailable(
     app: FastAPI, registry: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     registry.execute.return_value.fetchone.return_value = None
-    app.dependency_overrides.pop(get_registry_connection)
+    app.dependency_overrides.pop(get_database_connection)
     connection_context = Mock()
     connection_context.__enter__ = Mock(return_value=registry)
     connection_context.__exit__ = Mock(return_value=False)
     monkeypatch.setattr("agora_api.api.deps.psycopg.connect", Mock(return_value=connection_context))
     response = TestClient(app).get("/capabilities")
     assert response.status_code == 503
-    assert response.json() == {"detail": "Capability registry unavailable"}
+    assert response.json() == {"detail": "Database unavailable"}
 
 
 def test_new_operation_result_is_retrievable() -> None:

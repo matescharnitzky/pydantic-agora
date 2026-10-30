@@ -84,7 +84,6 @@ make install  # Dependencies and Chromium for browser tests
 make check    # Lint, type checks, and unit tests
 make test-db  # Database/worker integration tests; requires the running stack
 make smoke    # Bruno API checks and Playwright user scenarios; requires the running stack
-make test-models  # Explicit live OpenAI workflow checks; incurs model usage
 ```
 
 Run development mode in Docker:
@@ -95,37 +94,19 @@ make dev  # Start the stack and watch for changes; keep this terminal open
 
 ### Model generation
 
-`GET /capabilities` reads the worker-published capabilities and their schemas from PostgreSQL.
-Submit generation through `POST /workflows`, then retrieve its status/result from
-`GET /workflows/{id}`:
+`GET /capabilities` lists worker capabilities with their Pydantic-generated input and output
+schemas. Submit a workflow, then poll `GET /workflows/{id}` for its status and result:
 
 ```json
-{
-  "operation": "generate",
-  "inputs": {
-    "prompt": "Extract the name from: Ada Lovelace.",
-    "instructions": "Extract only the requested information.",
-    "model": "gpt-5-mini",
-    "output_schema": {
-      "type": "object",
-      "properties": {"name": {"type": "string"}},
-      "required": ["name"],
-      "additionalProperties": false
-    }
-  }
-}
+{"operation": "generate", "inputs": {"prompt": "Say hello", "instructions": "Be concise"}}
 ```
 
-Omit `output_schema` for plain text. Schemas use JSON Schema draft 2020-12 without references;
-object, array, and scalar results are validated in the worker. Provider-specific model/schema
-restrictions can still fail execution. Results contain `output` and the responding `model`.
-Saved requests retain the inputs as submitted; the worker applies defaults when executing.
-The API never receives the provider key. Model requests use OpenAI Responses and default to
-`gpt-5-mini`; set `inputs.model` to choose another compatible model.
+Generation returns `output` (text) and `model`. It uses OpenAI Responses with `gpt-5-mini` by
+default; override it with `inputs.model`. The API checks the operation and request envelope;
+the worker validates inputs and applies defaults. Invalid inputs produce a failed workflow.
 
-`make check` and `make smoke` do not call a live model. `make test-models` runs the live Bruno
-workflow checks for text, extraction, and classification. Service responsibilities and recovery
-behavior are in [architecture.md](docs/architecture.md).
+Regular checks do not call a live model. Run paid OpenAI checks explicitly with
+`npm run --workspace tests test:bruno:live`.
 
 ### Remote development
 

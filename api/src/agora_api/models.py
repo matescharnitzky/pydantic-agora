@@ -17,7 +17,6 @@ class Capability(BaseModel):
     input_schema: dict[str, JsonValue]
     output_schema: dict[str, JsonValue]
     credentials: list[str]
-    constraints: list[str]
 
 
 class Health(BaseModel):
