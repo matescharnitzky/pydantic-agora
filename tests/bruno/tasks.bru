@@ -28,5 +28,9 @@ tests {
     expect(parsing.input_schema.required).to.deep.equal(["files"]);
     expect(parsing.input_schema.properties).not.to.have.property("prompt");
     expect(parsing.output_schema.properties.text.type).to.equal("string");
+    const decision = res.getBody().find(item => item.id === "decide");
+    expect(decision.input_schema.required).to.have.members(["text", "questions"]);
+    expect(decision.input_schema.properties).not.to.have.property("question");
+    expect(decision.output_schema.properties).to.have.property("answers");
   });
 }

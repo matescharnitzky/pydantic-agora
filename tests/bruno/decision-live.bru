@@ -1,5 +1,5 @@
 meta {
-  name: Answer a question with Jev
+  name: Answer typed questions with Jev
   type: http
   seq: 10
   tags: [
@@ -14,7 +14,7 @@ post {
 }
 
 body:json {
-  {"inputs":{"text":"Please refund my order. I want my money back.","question":"Is the customer asking for a refund?"}}
+  {"inputs":{"text":"Please refund my damaged order. I want my money back, but I can still use the product.","questions":{"refund_requested":{"type":"boolean","question":"Is the customer asking for a refund?"},"category":{"type":"choice","question":"Which team should handle this request?","options":["billing","delivery","other"]},"urgency":{"type":"rubric","question":"How much is the customer blocked?","levels":["The customer can still use the product.","A workaround is required to use the product.","The customer cannot use the product."]}}}}
 }
 
 assert {
@@ -23,10 +23,18 @@ assert {
 
 tests {
   const { waitForRun } = require("./helpers/runs.js");
-  test("Jev returns a decision and probability", async function () {
+  test("Jev returns named decisions and distributions", async function () {
     const run = await waitForRun(bru, res.getBody().id, { timeoutMs: 90000 });
     expect(run.status).to.equal("successful");
-    expect(run.result.answer).to.equal(true);
-    expect(run.result.probability_yes).to.be.within(0, 1);
+    const answers = run.result.answers;
+    expect(answers.refund_requested.value).to.equal(true);
+    expect(answers.refund_requested.probability_yes).to.be.within(0, 1);
+    expect(answers.category.value).to.equal("billing");
+    expect(answers.category.probabilities).to.have.all.keys("billing", "delivery", "other");
+    expect(answers.urgency.value).to.equal(0);
+    expect(answers.urgency.expected_score).to.be.within(0, 2);
+    expect(answers.urgency.probabilities).to.have.all.keys("0", "1", "2");
+    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
+    expect(saved.data.result).to.deep.equal(run.result);
   });
 }
