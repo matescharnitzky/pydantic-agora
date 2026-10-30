@@ -1,0 +1,25 @@
+meta {
+  name: Reject unknown and malformed run IDs
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/runs/00000000-0000-0000-0000-000000000000
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("reject malformed run ID", async function () {
+    await bru.sendRequest({
+      method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/not-a-uuid"
+    }, (error, response) => {
+      expect(error ? error.status : response.status).to.equal(422);
+    });
+  });
+}

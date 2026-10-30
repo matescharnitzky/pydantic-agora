@@ -8,13 +8,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/workflows
+  url: {{baseUrl}}/tasks/generate/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"task":"generate","inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
+  {"inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
 }
 
 assert {
@@ -23,7 +23,7 @@ assert {
 
 tests {
   async function finished(id) {
-    const url = bru.getEnvVar("baseUrl") + "/workflows/" + id;
+    const url = bru.getEnvVar("baseUrl") + "/runs/" + id;
     for (let attempt = 0; attempt < 900; attempt++) {
       const response = await bru.sendRequest({ method: "GET", url });
       expect(response.status).to.equal(200);
@@ -34,24 +34,24 @@ tests {
   }
 
   test("real model text is persisted and retrievable", async function () {
-    const workflow = await finished(res.getBody().id);
-    expect(workflow.status).to.equal("successful");
-    expect(workflow.result.output.trim()).to.equal("hello");
-    expect(workflow.result.model).to.be.a("string");
-    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/workflows/" + workflow.id });
-    expect(saved.data).to.deep.equal(workflow);
+    const run = await finished(res.getBody().id);
+    expect(run.status).to.equal("successful");
+    expect(run.result.output.trim()).to.equal("hello");
+    expect(run.result.model).to.be.a("string");
+    const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
+    expect(saved.data).to.deep.equal(run);
   });
 
   test("upstream failures remain retrievable without raw provider errors", async function () {
     const response = await bru.sendRequest({
-      method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
+      method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/generate/runs",
       headers: { "Content-Type": "application/json" },
-      data: { task: "generate", inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
+      data: { inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
     });
     expect(response.status).to.equal(202);
-    const workflow = await finished(response.data.id);
-    expect(workflow.status).to.equal("failed");
-    expect(workflow.error).to.equal("Workflow failed");
-    expect(workflow.result).to.equal(null);
+    const run = await finished(response.data.id);
+    expect(run.status).to.equal("failed");
+    expect(run.error).to.equal("Run failed");
+    expect(run.result).to.equal(null);
   });
 }

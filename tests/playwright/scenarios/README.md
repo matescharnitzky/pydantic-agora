@@ -4,4 +4,4 @@ See the [root README](../../../README.md#development) for setup and test command
 
 | Scenario | What it checks |
 | --- | --- |
-| [Worker crash and restart](recovery.spec.ts) | Submit a workflow, wait until it is running, kill the worker, confirm the workflow remains retrievable, restart the worker, and verify the same workflow completes with the expected result. |
+| [Worker crash and restart](recovery.spec.ts) | Submit a run, wait until it is running, kill the worker, confirm the run remains retrievable, restart the worker, and verify the same run completes with the expected result. |

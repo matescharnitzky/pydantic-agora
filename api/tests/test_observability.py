@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from pytest import MonkeyPatch
 from sqlalchemy.exc import OperationalError
 
-from agora_api.api.deps import get_workflow_client
+from agora_api.api.deps import get_worker_client
 from agora_api.config import settings
 
 
@@ -21,12 +21,11 @@ def test_request_bodies_and_credentials_are_not_recorded(
     body_marker = "controlled-request-body-marker"
     monkeypatch.setattr(settings, "postgres_password", SecretStr(secret))
     client = Mock(spec=DBOSClient)
-    app.dependency_overrides[get_workflow_client] = lambda: client
+    app.dependency_overrides[get_worker_client] = lambda: client
 
     response = TestClient(app).post(
-        "/workflows",
+        "/tasks/add_then_scale/runs",
         json={
-            "task": "add_then_scale",
             "inputs": {"left": 1, "right": 2, "credential": body_marker},
         },
     )
@@ -52,9 +51,9 @@ def test_storage_error_details_are_not_exported(
 
     http = TestClient(app)
     response = (
-        http.post("/workflows", json={"task": "add_then_scale", "inputs": {"left": 1, "right": 2}})
+        http.post("/tasks/add_then_scale/runs", json={"inputs": {"left": 1, "right": 2}})
         if method == "POST"
-        else http.get(f"/workflows/{uuid4()}")
+        else http.get(f"/runs/{uuid4()}")
     )
     assert response.status_code == 503
     assert secret not in response.text

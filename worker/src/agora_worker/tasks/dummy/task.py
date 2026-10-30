@@ -12,19 +12,19 @@ class Numbers(ContractModel):
     right: int = Field(ge=-1_000_000, le=1_000_000)
 
 
-class ScaleInputs(Numbers):
+class ScaleInput(Numbers):
     double_positive: bool = False
 
 
-class DivideInputs(Numbers):
+class DivideInput(Numbers):
     divisor: int = Field(ge=-1_000_000, le=1_000_000)
 
 
-class WaitInputs(ContractModel):
+class WaitInput(ContractModel):
     seconds: float = Field(ge=0.0, le=5.0)
 
 
-class WorkflowResult(ContractModel):
+class DummyOutput(ContractModel):
     value: float
     branch: Literal["unchanged", "doubled", "divided"]
 
@@ -49,19 +49,19 @@ def wait(seconds: float) -> None:
     sleep(seconds)
 
 
-def add_then_scale(inputs: ScaleInputs) -> WorkflowResult:
+def add_then_scale(inputs: ScaleInput) -> DummyOutput:
     total = add(inputs.left, inputs.right)
     if inputs.double_positive and total > 0:
-        return WorkflowResult(value=float(double(total)), branch="doubled")
-    return WorkflowResult(value=float(total), branch="unchanged")
+        return DummyOutput(value=float(double(total)), branch="doubled")
+    return DummyOutput(value=float(total), branch="unchanged")
 
 
-def divide_sum(inputs: DivideInputs) -> WorkflowResult:
-    return WorkflowResult(
+def divide_sum(inputs: DivideInput) -> DummyOutput:
+    return DummyOutput(
         value=divide(add(inputs.left, inputs.right), inputs.divisor), branch="divided"
     )
 
 
-def wait_then_add(inputs: WaitInputs) -> WorkflowResult:
+def wait_then_add(inputs: WaitInput) -> DummyOutput:
     wait(inputs.seconds)
-    return WorkflowResult(value=float(add(2, 3)), branch="unchanged")
+    return DummyOutput(value=float(add(2, 3)), branch="unchanged")

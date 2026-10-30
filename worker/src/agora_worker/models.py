@@ -5,6 +5,6 @@ class ContractModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
-class WorkflowRequest(ContractModel):
+class TaskRequest(ContractModel):
     task: str = Field(min_length=1)
     inputs: dict[str, JsonValue]

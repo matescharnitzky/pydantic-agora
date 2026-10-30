@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/workflows
+  url: {{baseUrl}}/tasks/add_then_scale/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"task":"add_then_scale","inputs":{"left":"two","right":3}}
+  {"inputs":{"left":"two","right":3}}
 }
 
 assert {
@@ -22,13 +22,13 @@ tests {
   async function checkFailed(id) {
     for (let attempt = 0; attempt < 200; attempt++) {
       const response = await bru.sendRequest({
-        method: "GET", url: bru.getEnvVar("baseUrl") + "/workflows/" + id
+        method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + id
       });
       expect(response.status).to.equal(200);
       if (["successful", "failed"].includes(response.data.status)) {
         expect(response.data.status).to.equal("failed");
         expect(response.data.result).to.equal(null);
-        expect(response.data.error).to.equal("Workflow failed");
+        expect(response.data.error).to.equal("Run failed");
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -36,7 +36,7 @@ tests {
     throw new Error("Worker did not reject invalid inputs within 20 seconds");
   }
 
-  test("invalid inputs are reported as a failed workflow", async function () {
+  test("invalid inputs are reported as a failed run", async function () {
     await checkFailed(res.getBody().id);
   });
 
@@ -49,8 +49,8 @@ tests {
   ]) {
     test("worker rejects " + name, async function () {
       const response = await bru.sendRequest({
-        method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" }, data: { task, inputs }
+        method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/" + task + "/runs",
+        headers: { "Content-Type": "application/json" }, data: { inputs }
       });
       expect(response.status).to.equal(202);
       await checkFailed(response.data.id);

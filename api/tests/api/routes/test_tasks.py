@@ -7,8 +7,8 @@ from dbos import DBOSClient, WorkflowStatus
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from agora_api.api.deps import get_database_connection, get_workflow_client
-from agora_api.services.workflows import APPLICATION_NAME, WORKFLOW_NAME, get_workflow
+from agora_api.api.deps import get_database_connection, get_worker_client
+from agora_api.services.runs import APPLICATION_NAME, WORKFLOW_NAME, get_run
 
 
 @pytest.fixture
@@ -42,18 +42,22 @@ def test_discovery_reads_worker_metadata(app: FastAPI, registry: Mock) -> None:
 
 def test_new_worker_task_is_enqueued_without_api_changes(app: FastAPI, registry: Mock) -> None:
     client = Mock(spec=DBOSClient)
-    app.dependency_overrides[get_workflow_client] = lambda: client
+    app.dependency_overrides[get_worker_client] = lambda: client
     payload = {"task": "new-worker-task", "inputs": {"text": "Hello"}}
-    response = TestClient(app).post("/workflows", json=payload)
+    response = TestClient(app).post(
+        f"/tasks/{payload['task']}/runs", json={"inputs": payload["inputs"]}
+    )
     assert response.status_code == 202
     assert client.enqueue.call_args.args[1] == payload
 
 
 def test_task_inputs_are_left_for_worker_validation(app: FastAPI, registry: Mock) -> None:
     client = Mock(spec=DBOSClient)
-    app.dependency_overrides[get_workflow_client] = lambda: client
+    app.dependency_overrides[get_worker_client] = lambda: client
     payload = {"task": "new-worker-task", "inputs": {"text": 1}}
-    response = TestClient(app).post("/workflows", json=payload)
+    response = TestClient(app).post(
+        f"/tasks/{payload['task']}/runs", json={"inputs": payload["inputs"]}
+    )
     assert response.status_code == 202
     assert client.enqueue.call_args.args[1] == payload
 
@@ -94,6 +98,6 @@ def test_new_task_result_is_retrievable() -> None:
     status.updated_at = 2
     client = Mock(spec=DBOSClient)
     client.retrieve_workflow.return_value.get_status.return_value = status
-    workflow = get_workflow(client, str(uuid4()))
+    workflow = get_run(client, str(uuid4()))
     assert workflow is not None
     assert workflow.result == status.output

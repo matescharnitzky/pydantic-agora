@@ -1,0 +1,42 @@
+meta {
+  name: Retrieve a saved run failure
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/tasks/divide_sum/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"inputs":{"left":2,"right":3,"divisor":0}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  test("failed run remains retrievable", async function () {
+    const url = bru.getEnvVar("baseUrl") + "/runs/" + res.getBody().id;
+    let run;
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const response = await bru.sendRequest({ method: "GET", url });
+      expect(response.status).to.equal(200);
+      run = response.data;
+      if (["successful", "failed"].includes(run.status)) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    expect(run.status).to.equal("failed");
+    expect(run.result).to.equal(null);
+    expect(run.error).to.equal("Run failed");
+    expect(run.request.inputs).to.deep.equal({ left: 2, right: 3, divisor: 0 });
+    expect(run.created_at).to.be.a("number");
+    expect(run.updated_at).to.be.a("number");
+    const saved = await bru.sendRequest({ method: "GET", url });
+    expect(saved.status).to.equal(200);
+    expect(saved.data).to.deep.equal(run);
+  });
+}

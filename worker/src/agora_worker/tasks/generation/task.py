@@ -5,32 +5,32 @@ from pydantic_ai.durable_exec.dbos import DBOSDurability
 from agora_worker.models import ContractModel
 
 
-class GenerationInputs(ContractModel):
+class GenerationInput(ContractModel):
     prompt: str = Field(min_length=1)
     instructions: str = ""
     model: str = Field(default="gpt-5-mini", min_length=1)
 
 
-class GenerationResult(ContractModel):
+class GenerationOutput(ContractModel):
     output: str
     model: str
 
 
-agent = Agent[GenerationInputs, str](
+agent = Agent[GenerationInput, str](
     "openai-responses:gpt-5-mini",
     name="agora_generate_v1",
-    deps_type=GenerationInputs,
+    deps_type=GenerationInput,
     output_type=str,
     defer_model_check=True,
     capabilities=[DBOSDurability()],
 )
 
 
-def generate(inputs: GenerationInputs) -> GenerationResult:
+def generate(inputs: GenerationInput) -> GenerationOutput:
     result = agent.run_sync(
         inputs.prompt,
         instructions=inputs.instructions,
         model=f"openai-responses:{inputs.model}",
         deps=inputs,
     )
-    return GenerationResult(output=result.output, model=result.response.model_name or inputs.model)
+    return GenerationOutput(output=result.output, model=result.response.model_name or inputs.model)

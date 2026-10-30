@@ -5,15 +5,15 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/workflows
+  url: {{baseUrl}}/tasks/unregistered/runs
   body: json
   auth: none
 }
 
 body:json {
-  {"task":"unregistered","inputs":{}}
+  {"inputs":{}}
 }
 
 assert {
-  res.status: eq 422
+  res.status: eq 404
 }

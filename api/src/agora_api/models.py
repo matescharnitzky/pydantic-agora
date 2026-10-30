@@ -4,11 +4,14 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 
-class WorkflowRequest(BaseModel):
+class RunInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    task: str = Field(min_length=1)
     inputs: dict[str, JsonValue]
+
+
+class TaskRequest(RunInput):
+    task: str = Field(min_length=1)
 
 
 class Task(BaseModel):
@@ -24,22 +27,22 @@ class Health(BaseModel):
     service: Literal["api"] = "api"
 
 
-class WorkflowStatus(StrEnum):
+class RunStatus(StrEnum):
     WAITING = "waiting"
     RUNNING = "running"
     SUCCESSFUL = "successful"
     FAILED = "failed"
 
 
-class WorkflowSubmission(BaseModel):
+class RunSubmission(BaseModel):
     id: str
-    status: WorkflowStatus = WorkflowStatus.WAITING
+    status: RunStatus = RunStatus.WAITING
 
 
-class Workflow(BaseModel):
+class Run(BaseModel):
     id: str
-    status: WorkflowStatus
-    request: WorkflowRequest
+    status: RunStatus
+    request: TaskRequest
     result: dict[str, JsonValue] | None = None
     error: str | None = None
     created_at: int | None = None
