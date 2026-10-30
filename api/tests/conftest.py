@@ -26,7 +26,7 @@ def app() -> Iterator[FastAPI]:
         [
             {
                 "id": name,
-                "description": "Test operation",
+                "description": "Test task",
                 "input_schema": {},
                 "output_schema": {},
                 "credentials": [],

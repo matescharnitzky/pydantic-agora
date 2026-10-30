@@ -21,10 +21,10 @@ def test_discovery_reads_published_worker_registry(app: FastAPI) -> None:
     if not os.environ.get("POSTGRES_PASSWORD"):
         pytest.fail("POSTGRES_PASSWORD is required for database integration tests", pytrace=False)
     app.dependency_overrides.pop(get_database_connection)
-    response = TestClient(app).get("/capabilities")
+    response = TestClient(app).get("/tasks")
     assert response.status_code == 200
-    capabilities = {item["id"]: item for item in response.json()}
-    assert "generate" in capabilities
-    assert "prompt" in capabilities["generate"]["input_schema"]["properties"]
-    assert capabilities["generate"]["output_schema"]["properties"]["output"]["type"] == "string"
-    assert "add_then_scale" in capabilities
+    tasks = {item["id"]: item for item in response.json()}
+    assert "generate" in tasks
+    assert "prompt" in tasks["generate"]["input_schema"]["properties"]
+    assert tasks["generate"]["output_schema"]["properties"]["output"]["type"] == "string"
+    assert "add_then_scale" in tasks

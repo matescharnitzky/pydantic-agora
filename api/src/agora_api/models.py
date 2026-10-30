@@ -7,11 +7,11 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 class WorkflowRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    operation: str = Field(min_length=1)
+    task: str = Field(min_length=1)
     inputs: dict[str, JsonValue]
 
 
-class Capability(BaseModel):
+class Task(BaseModel):
     id: str
     description: str
     input_schema: dict[str, JsonValue]

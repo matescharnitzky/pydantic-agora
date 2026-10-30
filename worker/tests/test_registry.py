@@ -51,19 +51,19 @@ def test_registration_publishes_schemas_and_replaces_previous_catalog() -> None:
         register_tasks([task], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(
-                "SELECT capabilities FROM agora.capability_registry WHERE application = %s",
+                "SELECT tasks FROM agora.task_registry WHERE application = %s",
                 (application,),
             ).fetchone()
             assert row == ([task.metadata()],)
         register_tasks([], database_url, application=application)
         with psycopg.connect(database_url) as connection:
             row = connection.execute(
-                "SELECT capabilities FROM agora.capability_registry WHERE application = %s",
+                "SELECT tasks FROM agora.task_registry WHERE application = %s",
                 (application,),
             ).fetchone()
             assert row == ([],)
     finally:
         with psycopg.connect(database_url) as connection:
             connection.execute(
-                "DELETE FROM agora.capability_registry WHERE application = %s", (application,)
+                "DELETE FROM agora.task_registry WHERE application = %s", (application,)
             )

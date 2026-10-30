@@ -11,7 +11,7 @@ post {
 }
 
 body:json {
-  {"operation":"add_then_scale","inputs":{"left":2,"right":3,"double_positive":true}}
+  {"task":"add_then_scale","inputs":{"left":2,"right":3,"double_positive":true}}
 }
 
 assert {
@@ -20,7 +20,7 @@ assert {
 }
 
 tests {
-  async function checkWorkflow(id, operation, inputs, result) {
+  async function checkWorkflow(id, task, inputs, result) {
     const url = bru.getEnvVar("baseUrl") + "/workflows/" + id;
     let workflow;
     for (let attempt = 0; attempt < 200; attempt++) {
@@ -33,7 +33,7 @@ tests {
     }
     expect(workflow.status).to.equal("successful");
     expect(workflow.result).to.deep.equal(result);
-    expect(workflow.request.operation).to.equal(operation);
+    expect(workflow.request.task).to.equal(task);
     expect(workflow.request.inputs).to.deep.equal(inputs);
     expect(workflow.created_at).to.be.a("number");
     expect(workflow.updated_at).to.be.a("number");
@@ -49,7 +49,7 @@ tests {
     await checkWorkflow(id, "add_then_scale", { left: 2, right: 3, double_positive: true }, { value: 10, branch: "doubled" });
   });
 
-  for (const [name, operation, inputs, result] of [
+  for (const [name, task, inputs, result] of [
     ["worker defaults with submitted inputs", "add_then_scale", { left: 2, right: 3 }, { value: 5, branch: "unchanged" }],
     ["negative sum", "add_then_scale", { left: -5, right: 2, double_positive: true }, { value: -3, branch: "unchanged" }],
     ["division", "divide_sum", { left: 2, right: 4, divisor: 3 }, { value: 2, branch: "divided" }]
@@ -57,11 +57,11 @@ tests {
     test("separate worker persists " + name, async function () {
       const response = await bru.sendRequest({
         method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" }, data: { operation, inputs }
+        headers: { "Content-Type": "application/json" }, data: { task, inputs }
       });
       expect(response.status).to.equal(202);
       expect(response.data.status).to.equal("waiting");
-      await checkWorkflow(response.data.id, operation, inputs, result);
+      await checkWorkflow(response.data.id, task, inputs, result);
     });
   }
 }

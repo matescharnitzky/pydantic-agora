@@ -14,7 +14,7 @@ post {
 }
 
 body:json {
-  {"operation":"generate","inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
+  {"task":"generate","inputs":{"prompt":"Reply with exactly: hello","instructions":"Follow the requested output exactly."}}
 }
 
 assert {
@@ -46,7 +46,7 @@ tests {
     const response = await bru.sendRequest({
       method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
       headers: { "Content-Type": "application/json" },
-      data: { operation: "generate", inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
+      data: { task: "generate", inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
     });
     expect(response.status).to.equal(202);
     const workflow = await finished(response.data.id);

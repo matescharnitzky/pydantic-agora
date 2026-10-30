@@ -1,5 +1,5 @@
 meta {
-  name: Worker rejects invalid capability inputs
+  name: Worker rejects invalid task inputs
   type: http
   seq: 6
 }
@@ -11,7 +11,7 @@ post {
 }
 
 body:json {
-  {"operation":"add_then_scale","inputs":{"left":"two","right":3}}
+  {"task":"add_then_scale","inputs":{"left":"two","right":3}}
 }
 
 assert {
@@ -40,7 +40,7 @@ tests {
     await checkFailed(res.getBody().id);
   });
 
-  for (const [name, operation, inputs] of [
+  for (const [name, task, inputs] of [
     ["numeric string", "add_then_scale", { left: "1", right: 2 }],
     ["boolean integer", "add_then_scale", { left: true, right: 2 }],
     ["missing divisor", "divide_sum", { left: 1, right: 2 }],
@@ -50,7 +50,7 @@ tests {
     test("worker rejects " + name, async function () {
       const response = await bru.sendRequest({
         method: "POST", url: bru.getEnvVar("baseUrl") + "/workflows",
-        headers: { "Content-Type": "application/json" }, data: { operation, inputs }
+        headers: { "Content-Type": "application/json" }, data: { task, inputs }
       });
       expect(response.status).to.equal(202);
       await checkFailed(response.data.id);

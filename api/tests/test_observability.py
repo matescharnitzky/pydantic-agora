@@ -26,7 +26,7 @@ def test_request_bodies_and_credentials_are_not_recorded(
     response = TestClient(app).post(
         "/workflows",
         json={
-            "operation": "add_then_scale",
+            "task": "add_then_scale",
             "inputs": {"left": 1, "right": 2, "credential": body_marker},
         },
     )
@@ -52,9 +52,7 @@ def test_storage_error_details_are_not_exported(
 
     http = TestClient(app)
     response = (
-        http.post(
-            "/workflows", json={"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}
-        )
+        http.post("/workflows", json={"task": "add_then_scale", "inputs": {"left": 1, "right": 2}})
         if method == "POST"
         else http.get(f"/workflows/{uuid4()}")
     )

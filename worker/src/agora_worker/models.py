@@ -6,5 +6,5 @@ class ContractModel(BaseModel):
 
 
 class WorkflowRequest(ContractModel):
-    operation: str = Field(min_length=1)
+    task: str = Field(min_length=1)
     inputs: dict[str, JsonValue]

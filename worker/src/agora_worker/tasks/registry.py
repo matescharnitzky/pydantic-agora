@@ -82,11 +82,11 @@ def register_tasks(
     with psycopg.connect(database_url, connect_timeout=5) as connection:
         connection.execute("CREATE SCHEMA IF NOT EXISTS agora")
         connection.execute(
-            "CREATE TABLE IF NOT EXISTS agora.capability_registry ("
-            "application text PRIMARY KEY, capabilities jsonb NOT NULL)"
+            "CREATE TABLE IF NOT EXISTS agora.task_registry ("
+            "application text PRIMARY KEY, tasks jsonb NOT NULL)"
         )
         connection.execute(
-            "INSERT INTO agora.capability_registry (application, capabilities) VALUES (%s, %s) "
-            "ON CONFLICT (application) DO UPDATE SET capabilities = EXCLUDED.capabilities",
+            "INSERT INTO agora.task_registry (application, tasks) VALUES (%s, %s) "
+            "ON CONFLICT (application) DO UPDATE SET tasks = EXCLUDED.tasks",
             (application, Jsonb([task.metadata() for task in registry])),
         )

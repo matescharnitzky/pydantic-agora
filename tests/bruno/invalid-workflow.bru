@@ -1,5 +1,5 @@
 meta {
-  name: Reject an unregistered operation
+  name: Reject an unregistered task
   type: http
   seq: 5
 }
@@ -11,7 +11,7 @@ post {
 }
 
 body:json {
-  {"operation":"unregistered","inputs":{}}
+  {"task":"unregistered","inputs":{}}
 }
 
 assert {

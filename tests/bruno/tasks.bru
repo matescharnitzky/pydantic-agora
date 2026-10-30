@@ -1,0 +1,25 @@
+meta {
+  name: Discover model generation
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/tasks
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body[0].id: eq generate
+}
+
+tests {
+  test("discovery exposes Pydantic schemas and worker credentials", function () {
+    const task = res.getBody().find(item => item.id === "generate");
+    expect(task.input_schema.properties).to.have.property("prompt");
+    expect(task.input_schema.properties).not.to.have.property("output_schema");
+    expect(task.output_schema.properties.output.type).to.equal("string");
+    expect(task.credentials).to.deep.equal(["OPENAI_API_KEY (worker)"]);
+  });
+}

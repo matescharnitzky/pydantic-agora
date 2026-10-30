@@ -27,7 +27,7 @@ def test_status_translation(status: str, expected: str) -> None:
     workflow = Mock(spec=WorkflowStatus)
     workflow.name = WORKFLOW_NAME
     workflow.application_name = APPLICATION_NAME
-    workflow.input = {"args": [{"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}]}
+    workflow.input = {"args": [{"task": "add_then_scale", "inputs": {"left": 1, "right": 2}}]}
     workflow.status = status
     workflow.output = {"value": 3.0, "branch": "unchanged"}
     workflow.created_at = 1
@@ -47,7 +47,7 @@ def test_submission_only_enqueues_and_returns_location(app: FastAPI) -> None:
     app.dependency_overrides[get_workflow_client] = lambda: client
     response = TestClient(app).post(
         "/workflows",
-        json={"operation": "divide_sum", "inputs": {"left": 1, "right": 2, "divisor": 3}},
+        json={"task": "divide_sum", "inputs": {"left": 1, "right": 2, "divisor": 3}},
     )
     assert response.status_code == 202
     assert response.headers["Location"] == f"/workflows/{response.json()['id']}"
@@ -55,10 +55,10 @@ def test_submission_only_enqueues_and_returns_location(app: FastAPI) -> None:
     client.retrieve_workflow.assert_not_called()
 
 
-def test_unregistered_operation_is_rejected_before_enqueuing(app: FastAPI) -> None:
+def test_unregistered_task_is_rejected_before_enqueuing(app: FastAPI) -> None:
     client = Mock(spec=DBOSClient)
     app.dependency_overrides[get_workflow_client] = lambda: client
-    response = TestClient(app).post("/workflows", json={"operation": "eval", "inputs": {}})
+    response = TestClient(app).post("/workflows", json={"task": "eval", "inputs": {}})
     assert response.status_code == 422
     client.enqueue.assert_not_called()
 
@@ -68,7 +68,7 @@ def test_database_failure_is_sanitized(app: FastAPI, monkeypatch: pytest.MonkeyP
     client.enqueue.side_effect = OperationalError("secret connection", {}, Exception("secret"))
     monkeypatch.setattr("agora_api.api.deps.DBOSClient", Mock(return_value=client))
     response = TestClient(app).post(
-        "/workflows", json={"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}
+        "/workflows", json={"task": "add_then_scale", "inputs": {"left": 1, "right": 2}}
     )
     assert response.status_code == 503
     assert "secret" not in response.text
@@ -99,7 +99,7 @@ def test_unknown_dbos_status_is_rejected() -> None:
     workflow = Mock(spec=WorkflowStatus)
     workflow.name = WORKFLOW_NAME
     workflow.application_name = APPLICATION_NAME
-    workflow.input = {"args": [{"operation": "add_then_scale", "inputs": {"left": 1, "right": 2}}]}
+    workflow.input = {"args": [{"task": "add_then_scale", "inputs": {"left": 1, "right": 2}}]}
     workflow.status = "UNKNOWN"
     client = Mock(spec=DBOSClient)
     client.retrieve_workflow.return_value.get_status.return_value = workflow

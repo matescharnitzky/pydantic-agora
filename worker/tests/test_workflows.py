@@ -47,7 +47,7 @@ def test_worker_persists_meaningful_steps(client: DBOSClient, double_positive: b
             "serialization_type": WorkflowSerializationFormat.PORTABLE,
         },
         {
-            "operation": "add_then_scale",
+            "task": "add_then_scale",
             "inputs": {"left": 2, "right": 3, "double_positive": double_positive},
         },
     )
@@ -68,7 +68,7 @@ def test_worker_validates_inputs_independently(client: DBOSClient) -> None:
             "workflow_name": WORKFLOW_NAME,
             "serialization_type": WorkflowSerializationFormat.PORTABLE,
         },
-        {"operation": "unregistered", "inputs": {}},
+        {"task": "unregistered", "inputs": {}},
     )
     wait_for_status(handle, "ERROR")
     assert client.list_workflow_steps(handle.get_workflow_id()) == []

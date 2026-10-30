@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Response
 
 from agora_api.api.deps import DatabaseConnection, WorkflowClient
 from agora_api.models import Workflow, WorkflowRequest, WorkflowSubmission
-from agora_api.services import capabilities, workflows
+from agora_api.services import tasks, workflows
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 
@@ -16,11 +16,9 @@ def submit_workflow(
     client: WorkflowClient,
     connection: DatabaseConnection,
 ) -> WorkflowSubmission:
-    """Submit a registered operation; its inputs are validated by the worker."""
+    """Submit a registered task; its inputs are validated by the worker."""
     try:
-        capabilities.validate_operation(
-            request.operation, capabilities.list_capabilities(connection)
-        )
+        tasks.validate_task(request.task, tasks.list_tasks(connection))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     workflow_id = workflows.submit_workflow(client, request)

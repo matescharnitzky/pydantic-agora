@@ -17,7 +17,7 @@ def registry(app: FastAPI) -> Mock:
     connection.execute.return_value.fetchone.return_value = (
         [
             {
-                "id": "new-worker-operation",
+                "id": "new-worker-task",
                 "description": "Registered by the worker without API changes",
                 "input_schema": {
                     "type": "object",
@@ -35,24 +35,24 @@ def registry(app: FastAPI) -> Mock:
 
 
 def test_discovery_reads_worker_metadata(app: FastAPI, registry: Mock) -> None:
-    response = TestClient(app).get("/capabilities")
+    response = TestClient(app).get("/tasks")
     assert response.status_code == 200
     assert response.json() == registry.execute.return_value.fetchone.return_value[0]
 
 
-def test_new_worker_operation_is_enqueued_without_api_changes(app: FastAPI, registry: Mock) -> None:
+def test_new_worker_task_is_enqueued_without_api_changes(app: FastAPI, registry: Mock) -> None:
     client = Mock(spec=DBOSClient)
     app.dependency_overrides[get_workflow_client] = lambda: client
-    payload = {"operation": "new-worker-operation", "inputs": {"text": "Hello"}}
+    payload = {"task": "new-worker-task", "inputs": {"text": "Hello"}}
     response = TestClient(app).post("/workflows", json=payload)
     assert response.status_code == 202
     assert client.enqueue.call_args.args[1] == payload
 
 
-def test_capability_inputs_are_left_for_worker_validation(app: FastAPI, registry: Mock) -> None:
+def test_task_inputs_are_left_for_worker_validation(app: FastAPI, registry: Mock) -> None:
     client = Mock(spec=DBOSClient)
     app.dependency_overrides[get_workflow_client] = lambda: client
-    payload = {"operation": "new-worker-operation", "inputs": {"text": 1}}
+    payload = {"task": "new-worker-task", "inputs": {"text": 1}}
     response = TestClient(app).post("/workflows", json=payload)
     assert response.status_code == 202
     assert client.enqueue.call_args.args[1] == payload
@@ -64,7 +64,7 @@ def test_registry_failure_is_sanitized(app: FastAPI, monkeypatch: pytest.MonkeyP
         "agora_api.api.deps.psycopg.connect",
         Mock(side_effect=psycopg.OperationalError("secret connection")),
     )
-    response = TestClient(app).get("/capabilities")
+    response = TestClient(app).get("/tasks")
     assert response.status_code == 503
     assert "secret" not in response.text
 
@@ -78,17 +78,17 @@ def test_missing_registry_is_unavailable(
     connection_context.__enter__ = Mock(return_value=registry)
     connection_context.__exit__ = Mock(return_value=False)
     monkeypatch.setattr("agora_api.api.deps.psycopg.connect", Mock(return_value=connection_context))
-    response = TestClient(app).get("/capabilities")
+    response = TestClient(app).get("/tasks")
     assert response.status_code == 503
     assert response.json() == {"detail": "Database unavailable"}
 
 
-def test_new_operation_result_is_retrievable() -> None:
+def test_new_task_result_is_retrievable() -> None:
     status = Mock(spec=WorkflowStatus)
     status.name = WORKFLOW_NAME
     status.application_name = APPLICATION_NAME
     status.status = "SUCCESS"
-    status.input = {"args": [{"operation": "new-worker-operation", "inputs": {"text": "Hi"}}]}
+    status.input = {"args": [{"task": "new-worker-task", "inputs": {"text": "Hi"}}]}
     status.output = {"new-result-field": ["Hello", 42]}
     status.created_at = 1
     status.updated_at = 2

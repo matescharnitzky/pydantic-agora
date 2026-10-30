@@ -11,7 +11,7 @@ WORKFLOW_NAME = "agora.execute.v1"
 @DBOS.workflow(name=WORKFLOW_NAME, serialization_type=WorkflowSerializationFormat.PORTABLE)
 def execute(payload: dict[str, JsonValue]) -> dict[str, JsonValue]:
     request = WorkflowRequest.model_validate(payload)
-    task = next((item for item in TASK_REGISTRY if item.id == request.operation), None)
+    task = next((item for item in TASK_REGISTRY if item.id == request.task), None)
     if task is None:
-        raise ValueError(f"Unknown operation: {request.operation}")
+        raise ValueError(f"Unknown task: {request.task}")
     return task.call(request.inputs)
