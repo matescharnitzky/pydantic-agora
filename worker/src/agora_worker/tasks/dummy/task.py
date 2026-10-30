@@ -2,13 +2,14 @@ from time import sleep
 from typing import Literal
 
 from dbos import DBOS
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from agora_worker.models import ContractModel
 from agora_worker.tasks.base import Task
 
 
-class Numbers(ContractModel):
+class Numbers(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     left: int = Field(ge=-1_000_000, le=1_000_000)
     right: int = Field(ge=-1_000_000, le=1_000_000)
 
@@ -21,11 +22,15 @@ class DivideInput(Numbers):
     divisor: int = Field(ge=-1_000_000, le=1_000_000)
 
 
-class WaitInput(ContractModel):
+class WaitInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     seconds: float = Field(ge=0.0, le=5.0)
 
 
-class DummyOutput(ContractModel):
+class DummyOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     value: float
     branch: Literal["unchanged", "doubled", "divided"]
 

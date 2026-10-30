@@ -16,11 +16,17 @@ def test_plain_text_generation() -> None:
             GenerationInput(prompt="Say hello", instructions="Be concise")
         )
     assert result.output == "Hello"
-    assert result.model
+    assert result.model_dump() == {"output": "Hello"}
 
 
 @pytest.mark.parametrize(
-    "inputs", [{"prompt": ""}, {"prompt": 1}, {"prompt": "Hi", "output_schema": {}}]
+    "inputs",
+    [
+        {"prompt": ""},
+        {"prompt": 1},
+        {"prompt": "Hi", "output_schema": {}},
+        {"prompt": "Hi", "model": "another-model"},
+    ],
 )
 def test_invalid_generation_inputs_fail_before_model_execution(inputs: dict[str, object]) -> None:
     with pytest.raises(ValidationError):

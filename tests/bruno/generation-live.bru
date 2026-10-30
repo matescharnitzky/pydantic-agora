@@ -37,21 +37,8 @@ tests {
     const run = await finished(res.getBody().id);
     expect(run.status).to.equal("successful");
     expect(run.result.output.trim()).to.equal("hello");
-    expect(run.result.model).to.be.a("string");
     const saved = await bru.sendRequest({ method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id });
     expect(saved.data).to.deep.equal(run);
   });
 
-  test("upstream failures remain retrievable without raw provider errors", async function () {
-    const response = await bru.sendRequest({
-      method: "POST", url: bru.getEnvVar("baseUrl") + "/tasks/generate/runs",
-      headers: { "Content-Type": "application/json" },
-      data: { inputs: { prompt: "Hello", model: "agora-nonexistent-model" } }
-    });
-    expect(response.status).to.equal(202);
-    const run = await finished(response.data.id);
-    expect(run.status).to.equal("failed");
-    expect(run.error).to.equal("Run failed");
-    expect(run.result).to.equal(null);
-  });
 }
