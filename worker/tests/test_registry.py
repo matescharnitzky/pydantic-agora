@@ -33,7 +33,7 @@ class LengthTask(Task[Inputs, Result]):
 def test_workflow_validates_inputs_before_running_typed_task(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(workflows, "TASK_REGISTRY", [LengthTask])
+    monkeypatch.setattr("agora_worker.tasks.execution.TASK_REGISTRY", [LengthTask])
     execute = unwrap(workflows.execute)
     assert execute({"task": "length", "inputs": {"text": "abc"}}) == {"length": 3}
     with pytest.raises(ValueError, match="Invalid task data"):
