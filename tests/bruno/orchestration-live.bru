@@ -1,0 +1,35 @@
+meta {
+  name: Compose tasks with native Monty
+  type: http
+  seq: 16
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/orchestrations/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"prompt":"Use one program to loop over supplied documents. For each document except SKIP, call generate to return its uppercase text. Return all generated outputs.", "data":{"documents":["alpha","SKIP","beta"]}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("composition completes and remains retrievable", async function () {
+    const run = await waitForRun(bru, res.getBody().id, {timeoutMs: 180000});
+    expect(run.status).to.equal("successful");
+    expect(run.result.output).to.include("ALPHA");
+    expect(run.result.output).to.include("BETA");
+    expect(run.request.data.documents).to.deep.equal(["alpha", "SKIP", "beta"]);
+    const saved = await bru.sendRequest({method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id});
+    expect(saved.data).to.deep.equal(run);
+  });
+}

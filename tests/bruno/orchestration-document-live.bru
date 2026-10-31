@@ -1,0 +1,33 @@
+meta {
+  name: Parse decide and conditionally generate with native Monty
+  type: http
+  seq: 17
+  tags: [
+    live-model
+  ]
+}
+
+post {
+  url: {{baseUrl}}/orchestrations/runs
+  body: json
+  auth: none
+}
+
+body:json {
+  {"prompt": "Use one program: parse the supplied files, decide whether the text includes AGORA-PDF using a boolean question named matched, and only when matched generate a reply containing AGORA-PDF. Return the reply.", "data": {"files": [{"kind": "inline", "media_type": "application/pdf", "data": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggNDAgPj4Kc3RyZWFtCkJUIC9GMSAyMCBUZiAyMCAxMDAgVGQgKEFHT1JBLVBERikgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDEgMDAwMDAgbiAKMDAwMDAwMDMxMSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjQwMQolJUVPRg=="}]}}
+}
+
+assert {
+  res.status: eq 202
+}
+
+tests {
+  const { waitForRun } = require("./helpers/runs.js");
+  test("composition completes and remains retrievable", async function () {
+    const run = await waitForRun(bru, res.getBody().id, {timeoutMs: 180000});
+    expect(run.status).to.equal("successful");
+    expect(run.result.output).to.include("AGORA-PDF");
+    const saved = await bru.sendRequest({method: "GET", url: bru.getEnvVar("baseUrl") + "/runs/" + run.id});
+    expect(saved.data).to.deep.equal(run);
+  });
+}
